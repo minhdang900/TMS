@@ -1,0 +1,85 @@
+@import "color-aba.less";
+.login-screen-content {
+	background-image: url('/styles/images/bg_login.jpg');
+	background-repeat: no-repeat;
+    background-position: bottom;
+    background-size: cover;
+    height: 100vh;
+    position: relative;
+    overflow: auto;
+	.login-screen-title{
+		max-width: 480px;
+    	margin: 40px auto;
+    	color:@color-root;
+    	font-size: 25px;
+	}
+	.list-block .item-title{
+		&.label {
+		    width: 15%;
+		    -webkit-flex-shrink: 0;
+		    -ms-flex: 0 0 auto;
+		    flex-shrink: 0;
+		    color: @color-root !important;
+		}
+	}
+	form{
+		  position: relative;
+		  z-index: 1;
+		  background: #fff;
+		  -webkit-box-shadow: 0px 0px 26px -3px @color-root;
+		  -moz-box-shadow: 0px 0px 26px -3px @color-root;
+		  box-shadow: 0px 0px 26px -3px @color-root;
+		  max-width: 300px;
+		  margin: 0 auto 100px;
+		  padding: 10px;
+		  //border: 2px solid @color-active;
+		  border-top-left-radius: 3px;
+		  border-top-right-radius: 3px;
+		  border-bottom-left-radius: 3px;
+		  border-bottom-right-radius: 3px;
+		  text-align: center;
+		  .thumbnail {
+			  background: transparent;
+			 // width: 150px;
+			  height: 100px;
+			  margin: -75px auto 30px;
+			  padding: 20px 30px;
+			  border-top-left-radius: 100%;
+			  border-top-right-radius: 100%;
+			  border-bottom-left-radius: 100%;
+			  border-bottom-right-radius: 100%;
+			  box-sizing: border-box;
+			  img {
+				  display: block;
+				  width: 100%;
+				  border-radius: 35%;
+				}
+		}
+		input {
+		  outline: 0;
+		  background: #f2f2f2;
+		  width: 100%;
+		  border: 0;
+		  margin: 0 0 15px;
+		  padding: 15px;
+		  border-top-left-radius: 3px;
+		  border-top-right-radius: 3px;
+		  border-bottom-left-radius: 3px;
+		  border-bottom-right-radius: 3px;
+		  box-sizing: border-box;
+		  font-size: 14px;
+		}
+		a:active{
+			background:@color-root !important;
+		}
+		.button{
+			font-size: 17px;
+    		font-weight: bold;
+			border: 1px solid @color-root;		
+			&.active {
+			    background: fade(@color-root, 80%);
+			    color: @color-white;
+			}
+		}
+	}
+}

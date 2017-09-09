@@ -1,0 +1,218 @@
+/**
+ * 
+ * @author DangTM
+ * TPHCM, 21/05/2017
+ * 
+ */
+@import "color.less";
+@font-face {
+  font-family: 'IOS Icons';
+  font-style: normal;
+  font-weight: 400; 
+  src: url("../fonts/IOSIcons-Regular.eot"); 
+  src: local('IOS Icons'),
+       local('IOSIcons-Regular'),
+       url("../fonts/IOSIcons-Regular.woff2") format("woff2"),
+       url("../fonts/IOSIcons-Regular.woff") format("woff"),
+       url("../fonts/IOSIcons-Regular.ttf") format("truetype");
+}
+.ios-icons {
+  font-family: 'IOS Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 25px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-feature-settings: "liga";
+  -moz-font-feature-settings: "liga=1";
+  -moz-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  text-align: center;
+  .badge{
+  	position: absolute;
+  	background: #ff3b30;
+    left: 60%;
+    margin-left: -10px;
+    top: -2px;
+    font-size: 10px;
+    line-height: 16px;
+    height: 16px;
+    border-radius: 16px;
+    padding: 0px 4px;
+    min-width: 16px;
+    font-family: -apple-system, SF UI Text, Helvetica Neue, Helvetica, Arial, sans-serif;
+  }
+}
+@font-face {
+  font-family: 'Android Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url(../fonts/MaterialIcons-Regular.eot); /* For IE6-8 */
+  src: local('Android Icons'),
+       local('MaterialIcons-Regular'),
+       url(../fonts/MaterialIcons-Regular.woff2) format('woff2'),
+       url(../fonts/MaterialIcons-Regular.woff) format('woff'),
+       url(../fonts/MaterialIcons-Regular.ttf) format('truetype');
+}
+
+.android-icons {
+  font-family: 'Android Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
+.page{
+	height: 100%; 
+	margin: 0px; 
+	padding: 0px; 
+	background: @color-root;
+}
+@media ( max-width : 736px){
+	.page{
+		background: @color-root !important;
+	}
+}
+
+@font-face {
+  font-family: 'fontello';
+  src: url('../fonts/fontello.eot?43059812');
+  src: url('../fonts/fontello.eot?43059812#iefix') format('embedded-opentype'),
+       url('../fonts/fontello.woff?43059812') format('woff'),
+       url('../fonts/fontello.ttf?43059812') format('truetype'),
+       url('../fonts/fontello.svg?43059812#fontello') format('svg');
+}
+.fontello {
+	font-family: "fontello";
+ 	position: relative;
+	top: 1px;
+	display: inline-block;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale
+}
+.fontello-m {
+	font-family: "fontello";
+ 	position: relative;
+	top: 4px;
+	display: inline-block;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	margin-right: 5px;
+}
+.fontello-excellent:before {
+	content: "\e801"
+}
+.fontello-good:before {
+	content: "\e806"
+}
+.fontello-average:before {
+	content: "\e802"
+}
+.fontello-poor:before {
+	content: "\e803"
+}
+.fontello-very-poor:before {
+	content: "\e80f"
+}
+.fontello-other:before {
+    content: "\e800"
+}
+.fontello-process:before {
+	content: "\e807";
+}
+.fontello-check:before {
+	content: "\e811";
+}
+.fontello-error:before {
+	content: "\e812";
+}
+.glyphicon-config:before {
+	content: "\e80d"
+}
+
+ 
+.icon-emo-sunglasses:before { content: '\e800'; } 
+.icon-emo-thumbsup:before { content: '\e801'; } 
+.icon-emo-sleep:before { content: '\e802'; } 
+.icon-emo-unhappy:before { content: '\e803'; } 
+.icon-emo-wink2:before { content: '\e804'; } 
+.icon-emo-wink:before { content: '\e805'; } 
+.icon-emo-happy:before { content: '\e806'; }
+.icon-spin3:before { content: '\e807'; } 
+.icon-spin6:before { content: '\e808'; } 
+.icon-chart-bar:before { content: '\e809'; } 
+.icon-chart-pie:before { content: '\e80a'; } 
+.icon-chart-area:before { content: '\e80b'; } 
+.icon-chart-line:before { content: '\e80c'; }
+.icon-cog-alt:before { content: '\e80d'; } 
+.icon-cog:before { content: '\e80e'; }
+.icon-emo-angry:before { content: '\e80f'; } 
+.icon-emo-squint:before { content: '\e810'; }
+.icon-ok-circled:before { content: '\e811'; } 
+.icon-cancel-circled:before { content: '\e812'; } 
+.icon-users:before { content: '\e813'; } 
+/**
+ * customize color
+ */
+.tabbar-labels a.tab-link, .tabbar-labels a.link {
+    color: @color-root;
+}
+.navbar-inner{
+	color: @color-root;
+}
+a {
+	color: @color-active;
+	.tabbar & {
+		&.active{
+			color:@color-active !important;
+		}
+	}
+}
+i.home, i.icons-graph-round, i.icons-pie, i.bell{
+    .active &{
+        color:@color-active;
+    }
+}
+
+label.label-checkbox input[type="checkbox"]:checked + .item-media i.icon-form-checkbox , label.label-checkbox input[type="radio"]:checked + .item-media i.icon-form-checkbox {
+	border: none;
+	background-color: @color-active;
+}
+.right{
+	float:right;
+}
+.hidden {
+	display: none;
+}
+
