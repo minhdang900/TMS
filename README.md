@@ -3,7 +3,7 @@ Transfer goods
 # Requirment
 - Thông báo chuyến mới có thời gian Y/C rời bãi
 - Đến từng kho có thời gian đến kho, thời gian nhận hàng và nhận xong
-- Từng kho có địa chỉ(không bắt buộc) kho và tên kho
+- Từng kho có địa chỉ(không bắt buộc) kho và tên kho. Hiện thị nhiều kho để tài xế chọn khi đến kho. Bắt buộc nhận hàng hết các kho trước thực hiện bước kế tiếp
 - Thời gian giao hàng(thời gian Y/C) thì có thể khác thời gian hiện tại. hiện tại anh insert vào thời gian Y/C
 - Từng điểm giao xuất hiện thêm, giao theo kg hoặc theo kiện hoặc khối hoặc giá trị hàng hóa
 - Từng điểm giao thêm loại hàng, nhiệt độ bảo quản(để cho tài xế biết chỉnh nhiệt động cho đúng)
