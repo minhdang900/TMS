@@ -20,18 +20,6 @@ var $$ = Dom7;
 class Home extends Component{ 
 	constructor(props) {
 		super(props);
-//		0: Là assigned đến tài xế nhung chua duoc accept
-//		1: Là nhận chuyến nhưng chưa bắt đầu
-//		2: Là đã nhận chuyến rồi
-//		3: Là chuyến hoàn thành (Kết thúc chuyến, Kết thúc điểm giao)
-//		4: Cancel chuyến/ diem giao
-//		5: Tới điem giao
-//		6: Bắt đầu giao
-//		7: Rời bãi
-//		8: Đến kho hàng
-//		9: Bắt đầu nhận
-//		10: Nhận xong
-//		11: KHONG NHAN GIAO, doi bo phan Operation duyet moi co hieu luc.
 		this.state = {
 			latitude: 0,
 			longitude:0,
