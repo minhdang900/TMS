@@ -60,7 +60,6 @@ class Home extends Component{
 			_.getTrips();
 		});
 		Common.socket.on('receiveNotify', this.receiveNotify.bind(this));
-//		Common.socket.emit('notify', {message: 'Hello My Name ' + Common.user.fullname, user: Common.user});
 		$('#star-rating').barrating({
 	        theme: 'fontawesome-stars',
 	        initialRating: Common.user.star,
