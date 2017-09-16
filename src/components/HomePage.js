@@ -630,7 +630,7 @@ class Home extends Component{
 			Cookie.remove("user");
 //			Cookie.save("user", JSON.stringify({fullname:Common.user.fullname, username: Common.user.username, password: Common.user.password, login: false}));
 //			Common.user.login = false;
-			Widget.callAndroid({cmd:'set', key:'NOTIFY', value:'http://logaba.com:19091/notify/check?username=unknown'});
+//			Widget.callAndroid({cmd:'set', key:'NOTIFY', value:'http://logaba.com:19091/notify/check?username=unknown'});
 			Widget.callAndroid({cmd:'set', key:'USERNAME', value:'unknown'});
 			setTimeout(function(){
 				location.href = '/#/login';
