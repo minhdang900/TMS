@@ -104,17 +104,15 @@ app.post('/login', passport.authenticate('local-login', {
 app.get('/trips', function(req, res){
 	var username = req.query.username;
 	database.getTrips(username, (result) =>{
-		var length = result.length;
-		trips = [];
+		//[ [ Object, Object, Object,.. ], [Object, Object...] ]
+		trips = result[0];
+		var length = trips.length;
 		for(var i = 0; i < length; i++){
-			var obj = {id:'', name: '', status: '', time: '', trip_num: ''};
-			obj.id = result[i].TripID;
-			obj.name = result[i].Route;
-			obj.status = result[i].IsConfirmed;
-			obj.time = result[i].TripDate;
-			obj.trip_num = result[i].TripNumber;
-			trips.push(obj);
+			trips[i].location = [];
+			trips[i].ware_house = [];
+			trips[i].ware_house.push(result[1].find((x) => x.TripID == trips[i].id)); // undefined
 		}
+		console.log(trips);
 		res.send({status: 1, message: 'Success', user: req.user, trips: trips});
 	});
 });
@@ -172,6 +170,20 @@ app.post('/trip/stock', function(req, res){
 	var location = latitude + '@' + longitude;
 	var km = req.body.num;
 	database.stock(id, km, (result) =>{
+		res.send(result);
+	});
+});
+app.get('/trip/warehouse/:tripId', function(req, res){
+	var tripId = req.params.tripId;
+	database.getWareHouse(tripId, (result) =>{
+		res.send(result);
+	});
+});
+app.post('/trip/warehouse', function(req, res){
+	var id = req.body.id;
+	var tripID = req.body.tripID;
+	var status = req.body.status;
+	database.updateWareHouse(tripID, id, status, (result) =>{
 		res.send(result);
 	});
 });
