@@ -33,6 +33,7 @@ class Home extends Component{
 				trip_num: '00000',
 				status: '-1',
 				time: Common.getDateTime(), 
+				ware_house:[],
 				location:[{
 					id: '-1', 
 					name: 'ĐIỂM GIAO',
@@ -180,21 +181,22 @@ class Home extends Component{
 		Common.request(obj, (res)=> {
 			var tmp = res.trips;
 			var length = tmp.length;
-			var trips = [];
+//			var trips = [];
 //			var tripState = _.state.trips;
-			for(var i = 0; i < length; i++){
-				var obj = {
-					id: tmp[i].id,
-					name: tmp[i].name,
-					status: tmp[i].status,
-					time: tmp[i].time,
-					trip_num: tmp[i].trip_num,
-					location:[]
-				} 
-				trips.push(obj);
-			}
+//			for(var i = 0; i < length; i++){
+//				var obj = {
+//					id: tmp[i].id,
+//					name: tmp[i].name,
+//					status: tmp[i].status,
+//					time: tmp[i].time,
+//					trip_num: tmp[i].trip_num,
+//					ware_house:tmp[i].trip_num,
+//					location:[]
+//				} 
+//				trips.push(obj);
+//			}
 			if(length > 0){
-				_.setState({trips: trips});
+				_.setState({trips: res.trips});
 			}
 			FWPlugin.pullToRefreshDone();
 			FWPlugin.hideIndicator();
@@ -262,20 +264,18 @@ class Home extends Component{
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
 	   				 FWPlugin.alert('XÁC NHẬN RỜI BÃI THÀNH CÔNG');
-	   				 var trips = _.state.trips;
-	    					for(var i = 0; i < trips.length; i++){
-	    						if(Number(trips[i].id) == item.id){
-	    							trips[i].status = '8';
-	    							_.setState({
-	    								trips: trips
-	    							});
-	    						}
-	    					}
-	   			 } else {
+		   			 for(var i = 0; i < trips.length; i++){
+							if(Number(trips[i].id) == item.id){
+								trips[i].status = '8';
+								_.setState({
+									trips: trips
+								});
+							}
+					 }
+	   			} else {
 	   				 FWPlugin.alert('RỜI BÃI THẤT BẠI');
 	   			 }
-	   			 
-	   		 });
+	   		}); 
 		 });
 	}
 	/**
@@ -472,12 +472,7 @@ class Home extends Component{
 						</p>
 		} else if(Number(item.status) == 8){
 			status = <span className="badge bg-orange"><i className="fa fa-space-shuttle faa-passing animated" aria-hidden="true"></i> ĐANG ĐẾN KHO HÀNG </span>;
-			buttonStart = <p>
-							 <Link to="/home" replace 
-								onClick={this.stock.bind(this, item)} className="button button-round button-fill button-start bg-orange">
-							 	<i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> ĐẾN KHO HÀNG
-					   	     </Link>
-						</p>
+			buttonStart = '';
 		} else if(Number(item.status) == 9){
 			status = <span className="badge bg-orange"><i className="fa fa-cubes" aria-hidden="true"></i> BẮT ĐẦU NHẬN HÀNG </span>;
 			buttonStart = <p>
@@ -546,14 +541,42 @@ class Home extends Component{
 	       	      <div className="accordion-item-content">
 	       	        <div className="content-block">
 			       	    <div className="timeline tablet-sides">
-				       	    {/*buttonCancel*/}
 				       	    {buttonStart}
+				       	    <div style={{display: (item.status == '8'? 'block': 'none')}}>
+				       	    	{item.ware_house.map(this.wareHouse, this)}
+				       	    </div>
 				       	    {item.location.map(this.pointDraw, this)}
-				       	    {this.state.isAllowEnd == true ? buttonEnd: ''}
+				       	    {this.state.isAllowEnd == true ? buttonEnd : ''}
 				       	</div>
 	       	        </div>
 	       	      </div>
      	    </li>
+		);
+	}
+	wareHouse(item){
+		return(
+			<div key={'warehouse__' + item.id} className="list-block media-list list-warehouse">
+		         <ul style={{background:'transparent'}}>
+		         <li className="item-content">
+		             <div className="item-inner">
+			           <div className="item-title-row">
+			             <div className="item-title">{item.name}</div>
+			           </div>
+			           <div className="item-subtitle">
+			           		<p className="color-white"><i className="fa fa-map-marker color-orange" aria-hidden="true"></i> {item.address}</p>
+			           		<p className="color-white"><i className="fa fa-cubes color-orange" aria-hidden="true"></i> {item.type}</p>
+			           		<p className="color-white"><i className="fa fa-thermometer-empty color-orange" aria-hidden="true"></i> {item.temperature}</p>
+			           </div>
+		             </div>
+		             <div className="item-after">
+			              <Link to="/home" replace 
+							 onClick={this.stock.bind(this, item)} className="button button-round button-fill bg-orange">
+						 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> ĐẾN KHO
+				   	      </Link>
+		             </div>
+		           </li>
+		         </ul>
+	          </div>
 		);
 	}
 	pointDraw(item){
@@ -938,8 +961,7 @@ class Popup extends React.Component {
 	   }
 	   componentWillMount(){
 	   }
-	   componentDidMount(){   
-			
+	   componentDidMount(){   	
 	   }
 	   back(){
 		   var _=this;

@@ -245,7 +245,7 @@
 	}
 }
 .popup{
-	background:	fade(@color-active, 100%);//url('/styles/images/bg-aba.jpg');
+	background:	url('/styles/images/bg-aba.jpg');//fade(@color-active, 100%);//url('/styles/images/bg-aba.jpg');
 	background-repeat: no-repeat;
     background-position: bottom;
     background-size: cover;
@@ -320,6 +320,12 @@
 			}
 		}
    }
+   .list-warehouse{
+   	 .button {
+		    border: 1px solid @color-root;
+		    color: @color-white !important;
+     }
+   }
    .timeline-item-date {
 	    -webkit-flex-shrink: 0;
 	    -ms-flex: 0 0 auto;
@@ -331,6 +337,7 @@
 	    
 	}
 	.timeline{
+		margin: 5px 0;
 		.button {
 		    border: 1px solid @color-root;
 		    color: @color-root;
@@ -353,11 +360,11 @@
 		height: 100%; 
 		margin: 0px; 
 		padding: 0px; 
-		background: fade(@color-active, 80%);
-		//background-image: url('/styles/images/bg-aba.jpg');
-//		background-repeat: no-repeat;
-//	    background-position: bottom;
-//	    background-size: cover;
+//		background: fade(@color-active, 80%);
+		background-image: url('/styles/images/bg-aba.jpg');
+		background-repeat: no-repeat;
+	    background-position: bottom;
+	    background-size: cover;
 	}
 	
 	
@@ -393,11 +400,11 @@
 		display: none;
 	}
 	.panel{
-		background: fade(@color-active, 70%);
-//		background-image: url('/styles/images/bg-aba.jpg');
-//	    background-repeat: no-repeat;
-//	    background-position: bottom;
-//	    background-size: cover;
+//		background: fade(@color-active, 70%);
+		background-image: url('/styles/images/bg-aba.jpg');
+	    background-repeat: no-repeat;
+	    background-position: bottom;
+	    background-size: cover;
 		.content-block{
 			color: @color-white;
 			p{
