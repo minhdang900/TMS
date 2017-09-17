@@ -38,8 +38,9 @@ function ABADB() {
   }
   this.driverAssigned =  function(callback){
 	  connection.getConnection(function(err, con){
+		    
 		    // call sql query
-		    var query = "SELECT t.TripID, TripNumber, Route, DriverUser, TripDate, IsConfirmed, TypeGoods, CustomerName, s.Name as Address, "
+		    var query = "SELECT t.TripID, TripNumber, Route, DriverUser, TripDate, IsConfirmed, t.TypeGoods, CustomerName, s.Name as Address, "
 		    			+ " (SELECT Count(*)  FROM Messager WHERE Receiver=t.DriverUser and Status=0) as num_notify "
 		    			+ " FROM Trips t, Trip_WareHouse s "
 		    			+ " WHERE IsConfirmed = 0 and s.TripID = t.TripID";
@@ -133,24 +134,18 @@ function ABADB() {
   }
   this.getTrips = function(username, callback){
 	  connection.getConnection(function(err, con){
-		    // call sql query
-		    var query = "SELECT t.TripID, t.TripNumber, t.Route,  FORMAT(t.TripDate, 'dd/MM/yyyy hh:mm:ss') as TripDate, t.IsConfirmed"
-		    	+' FROM Trips t'
-		    	+' WHERE t.DriverUser=@username AND cast(GETDATE() as date) <= cast(t.TripDate as date) and t.IsConfirmed != 0 Order By t.TripDate DESC';
-		  	con.input('username', sql.VarChar(50), username);
-			con.query(query, (err, result) => {
-				if(err){
+		  con.input('username', sql.VarChar, username);
+		  con.execute('Proc_GetTrip').then((result, err) => {
+		    	if(err){
 		    		console.dir(err);
-		    		callback({status: 0, message: 'FAIL', error_code: 112});
+		    		callback({status: 0, message: 'ERROR GET LIST TRIPS', error_code: 1289});
 		    		return;
 		    	}
-				if(typeof result === 'undefined'){
-					callback([]);
-					return;
-				}
-				
-				callback(result.recordset);
-			});
+		       callback(result.recordsets);
+		    }).catch(function(err) { 
+		      console.log(err);
+		    });
+			
 	  });
   }
   this.leavePark = function(username, num_km, location, callback){
@@ -238,7 +233,45 @@ function ABADB() {
 			});
 	  });
   }
- 
+  this.getWareHouse = function(id, callback){
+	  connection.getConnection(function(err, con){
+		    // call sql query
+		    var query = "SELECT ID as id, Name as name, Address as address, Temperature as temperature, Status as status, TypeGoods as type FROM Trip_WareHouse WHERE TripID=@ID";
+		    con.input('ID', sql.BigInt, id);
+			con.query(query, (err, result) => {
+				if(err){
+		    		console.dir(err);
+		    		callback({status: 0, message: 'FAIL', error_code: 5080});
+		    		return;
+		    	}
+				if(typeof result === 'undefined'){
+					callback({status: 0, message: 'FAIL', error_code: 5080});
+					return;
+				}
+				callback({status: 1, data: result.recordset});
+			});
+	  });
+  }
+  this.updateWareHouse = function(tripID, id, status, callback){
+	  connection.getConnection(function(err, con){
+		  var query = 'UPDATE SET Status=@Status FROM Trip_WareHouse WHERE ID=@ID AND TripID=@TripID';
+		  con.input('TripID', sql.BigInt, tripID);
+		  con.input('ID', sql.BigInt, id);
+		  con.input('Status', sql.Int, status);
+		  con.query(query, (err, result)=>{
+			  if(err){
+		    		console.dir(err);
+		    		callback({status: 0, message: 'FAIL', error_code: 5079});
+		    		return;
+		    	}
+				if(typeof result === 'undefined'){
+					callback({status: 0, message: 'FAIL', error_code: 5079});
+					return;
+				}
+				callback({status: 1, message: 'Status updated'});
+		  });
+	  });
+  }
   this.receiveGoods = function(id, callback){
 	  connection.getConnection(function(err, con){
 		    // call sql query
@@ -345,7 +378,7 @@ function ABADB() {
 		    	+' ORDER BY d.LocationIndex ASC';
 		  	con.input('id', sql.Int, id);
 			con.query(query, (err, result) => {
-				console.dir(result);
+//				console.dir(result);
 				callback(result.recordset); 
 			});
 	  });
