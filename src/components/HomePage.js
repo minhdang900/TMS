@@ -181,20 +181,6 @@ class Home extends Component{
 		Common.request(obj, (res)=> {
 			var tmp = res.trips;
 			var length = tmp.length;
-//			var trips = [];
-//			var tripState = _.state.trips;
-//			for(var i = 0; i < length; i++){
-//				var obj = {
-//					id: tmp[i].id,
-//					name: tmp[i].name,
-//					status: tmp[i].status,
-//					time: tmp[i].time,
-//					trip_num: tmp[i].trip_num,
-//					ware_house:tmp[i].trip_num,
-//					location:[]
-//				} 
-//				trips.push(obj);
-//			}
 			if(length > 0){
 				_.setState({trips: res.trips});
 			}
@@ -264,6 +250,7 @@ class Home extends Component{
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
 	   				 FWPlugin.alert('XÁC NHẬN RỜI BÃI THÀNH CÔNG');
+	   				 var trips = _.state.trips;
 		   			 for(var i = 0; i < trips.length; i++){
 							if(Number(trips[i].id) == item.id){
 								trips[i].status = '8';
@@ -287,24 +274,43 @@ class Home extends Component{
 		 Common.getLocation(function(pos){
 			 _.setState({latitude: pos.lat, longitude: pos.lon});
 			 FWPlugin.showIndicator();
-			 Common.request({type:'POST', url:'/trip/stock', 
-				 data:{id: item.id, num: 0, latitude: pos.lat, longitude: pos.lon}}, function(res){
+			 Common.request({type:'POST', url:'/trip/warehouse', 
+				 data:{TripID: item.TripID, id: item.id, latitude: pos.lat, longitude: pos.lon, status: (Number(item.status) + 1)}}, function(res){
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
-	   				 FWPlugin.alert('XÁC NHẬN TỚI KHO THÀNH CÔNG');
+	   				 if(item.status == 0){
+	   					 FWPlugin.alert('XÁC NHẬN ĐẾN KHO THÀNH CÔNG');
+	   				 } else if(item.status == 1){
+	   					FWPlugin.alert('XÁC NHẬN RỜI KHO THÀNH CÔNG');
+	   				 }
 	   				 var trips = _.state.trips;
-	    					for(var i = 0; i < trips.length; i++){
-	    						if(Number(trips[i].id) == item.id){
-	    							trips[i].status = '9';
-	    							_.setState({
-	    								trips: trips
-	    							});
-	    						}
-	    					}
+	   				 var index = trips.findIndex((x)=> x.id == item.TripID);
+	   				 var wareHouse = trips[index].ware_house;
+	   				 var length = wareHouse.length;
+	   				 var check = 0; // If all warehouse have changed status to 2 => change status Trips Index.
+					 for(var i = 0; i < length; i++){
+						if(wareHouse[i].id == item.id){
+							wareHouse[i].status = Number(item.status) + 1;
+						}
+						if(wareHouse[i].status == 2){
+							check+=1;
+						}
+					 }
+					 if(check == length){
+						trips[index].status = '1';
+						
+					 } 
+					 trips[index].ware_house = wareHouse;
+					 _.setState({
+						trips: trips
+					 });
 	   			 } else {
-	   				 FWPlugin.alert('XÁC NHẬN TỚI KHO THẤT BẠI');
-	   			 }
-	   			 
+	   				if(item.status == 0){
+	   					FWPlugin.alert('XÁC NHẬN TỚI KHO THẤT BẠI');
+	   				 } else if(item.status == 1){
+	   					FWPlugin.alert('XÁC NHẬN RỜI KHO THẤT BẠI');
+	   				 }
+	   			 } 
 	   		 });
 		 });
 	}
@@ -406,6 +412,7 @@ class Home extends Component{
 	   		 });
 		 });
 	}
+	
 	cancelTrips(item){
 		var _=this;
 		FWPlugin.modal({
@@ -543,7 +550,11 @@ class Home extends Component{
 			       	    <div className="timeline tablet-sides">
 				       	    {buttonStart}
 				       	    <div style={{display: (item.status == '8'? 'block': 'none')}}>
-				       	    	{item.ware_house.map(this.wareHouse, this)}
+				       	    	<div className="list-block media-list list-warehouse">
+				       	    		<ul style={{background:'transparent'}}>
+					       	    		{item.ware_house.map(this.wareHouse, this)}
+				       	    		</ul>
+				       	    	</div>
 				       	    </div>
 				       	    {item.location.map(this.pointDraw, this)}
 				       	    {this.state.isAllowEnd == true ? buttonEnd : ''}
@@ -554,31 +565,37 @@ class Home extends Component{
 		);
 	}
 	wareHouse(item){
+		var button = '';
+		if(item.status == 0){
+			button = <Link to="/home" replace 
+					 onClick={this.stock.bind(this, item)} className="button button-round button-fill bg-orange">
+				 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> ĐẾN KHO
+		  	      </Link>
+		} else if(item.status == 1){
+			button = <Link to="/home" replace 
+					 onClick={this.stock.bind(this, item)} className="button button-round button-fill bg-orange">
+				 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> RỜI KHO
+		 	      </Link>
+		}
 		return(
-			<div key={'warehouse__' + item.id} className="list-block media-list list-warehouse">
-		         <ul style={{background:'transparent'}}>
-		         <li className="item-content">
-		             <div className="item-inner">
-			           <div className="item-title-row">
-			             <div className="item-title">{item.name}</div>
-			           </div>
-			           <div className="item-subtitle">
-			           		<p className="color-white"><i className="fa fa-map-marker color-orange" aria-hidden="true"></i> {item.address}</p>
-			           		<p className="color-white"><i className="fa fa-cubes color-orange" aria-hidden="true"></i> {item.type}</p>
-			           		<p className="color-white"><i className="fa fa-thermometer-empty color-orange" aria-hidden="true"></i> {item.temperature}</p>
-			           </div>
-		             </div>
-		             <div className="item-after">
-			              <Link to="/home" replace 
-							 onClick={this.stock.bind(this, item)} className="button button-round button-fill bg-orange">
-						 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> ĐẾN KHO
-				   	      </Link>
-		             </div>
-		           </li>
-		         </ul>
-	          </div>
+				<li key={'warehouse__' + item.id} className="item-content">
+	             <div className="item-inner">
+		           <div className="item-title-row">
+		             <div className="item-title">{item.name}</div>
+		           </div>
+		           <div className="item-subtitle">
+		           		<p className="color-white"><i className="fa fa-map-marker color-orange" aria-hidden="true"></i> {item.address}</p>
+		           		<p className="color-white"><i className="fa fa-cubes color-orange" aria-hidden="true"></i> {item.type}</p>
+		           		<p className="color-white"><i className="fa fa-thermometer-empty color-orange" aria-hidden="true"></i> {item.temperature}</p>
+		           </div>
+	             </div>
+	             <div className="item-after">
+		              {button}
+	             </div>
+	           </li>
 		);
 	}
+	
 	pointDraw(item){
 		var _= this;		
 		var status = <p className="color-green"><i className="fa fa-check-circle-o" aria-hidden="true"></i> HOÀN THÀNH </p>;
@@ -591,7 +608,7 @@ class Home extends Component{
 			status =  <p className="color-orange"><i className="fa fa-refresh fa-spin fa-fw"></i> ĐANG VẬN CHUYỂN </p>;
 			button =<p>
 						 <Link to="/home" replace 
-							onClick={this.arrivedPoint.bind(this, item)} className="button button-round">
+							onClick={this.delivery.bind(this, item, 5)} className="button button-round">
 						 	<i className="fa fa-space-shuttle faa-passing animated" aria-hidden="true"></i> TỚI ĐIỂM GIAO
 				   	      </Link>
 					</p>				
@@ -605,12 +622,28 @@ class Home extends Component{
 			status =  <p className="color-orange"><i className="fa fa-space-shuttle faa-passing animated" aria-hidden="true"></i> TỚI ĐIỂM GIAO </p>;
 			button =<p>
 						 <Link to="/home" replace 
-							onClick={this.startTranfer.bind(this, item)} className="button button-round">
+							onClick={this.delivery.bind(this, item, 6)} className="button button-round">
 						 	<i className="ios-icons">forward</i> BẮT ĐẦU GIAO
 				   	      </Link>
 					</p>
 		} else if(Number(item.status) == 6){
 			status =  <p className="color-orange"><i className="fa fa-refresh fa-spin fa-fw" aria-hidden="true"></i> ĐANG GIAO </p>;
+			button =<p>
+						 <Link to="/home" replace 
+							onClick={this.delivery.bind(this, item, 7)} className="button button-round">
+						 	<i className="ios-icons">forward</i> GIAO HÀNG XONG
+				   	      </Link>
+					</p>
+		} else if(Number(item.status) == 7){
+			status =  <p className="color-orange"><i className="fa fa-refresh fa-spin fa-fw" aria-hidden="true"></i> GIAO XONG </p>;
+			button =<p>
+						 <Link to="/home" replace 
+							onClick={this.delivery.bind(this, item, 8)} className="button button-round">
+						 	<i className="ios-icons">forward</i> RỜI ĐIỂM GIAO
+				   	      </Link>
+					</p>
+		} else if(Number(item.status) == 8){
+			status =  <p className="color-orange"><i className="fa fa-refresh fa-spin fa-fw" aria-hidden="true"></i> GIAO XONG </p>;
 			button =<p>
 						 <Link to="/home" replace 
 							onClick={this.finishPoint.bind(this, item)} className="button button-round">
@@ -669,6 +702,27 @@ class Home extends Component{
 			location.href = '/#/report';
 		}, 700);
 	}
+	delivery(item, status){
+		var _=this;
+		if(status == 8){
+			_.setState({locationId: item.id});
+			FWPlugin.popup('.popup-tray');
+			return;
+		}
+		FWPlugin.showIndicator();
+		Common.getLocation(function(pos){
+			_.setState({latitude: pos.lat, longitude: pos.lon});
+			Common.request({type:"POST", url: '/point/delivery', 
+				data:{id: item.id, status: status, latitude: _.state.latitude, longitude: _.state.longitude, num: 0}}, (res)=>{
+				if(res.status){
+					_.updateStatusPoint(item.id, status);
+				} else {
+					FWPlugin.alert('XÁC NHẬN THẤT BẠI');
+				}
+				FWPlugin.hideIndicator();
+			});
+    	});	
+	}
 	updateStatusPoint(idPoint, status){
 		var trips = this.state.trips;
 		var length = trips.length;
@@ -683,6 +737,7 @@ class Home extends Component{
 				this.setState({trips: trips});
 			}
 		}
+		FWPlugin.alert('XÁC NHẬN THÀNH CÔNG');
 	}
 	/**
 	 * Arrived point
@@ -696,45 +751,11 @@ class Home extends Component{
 				if(res.status){
 					_.updateStatusPoint(item.id, 5);
 				} else {
-					FWPlugin.alert('TỚI ĐIỂM GIAO THẤT BẠI');
+					FWPlugin.alert('XÁC NHẬN THẤT BẠI');
 				}
 				FWPlugin.hideIndicator();
 			});
-    	});
-//		FWPlugin.modal({
-//		    title:  'TMS Message',
-//		    text: 'NHẬP SỐ KM CÔNG TƠ TỚI ĐIỂM GIAO',
-//		    afterText: '<input type="number" min = 0 id="num_km_trip" placeholder="Số KM công tơ" />',
-//		    buttons: [
-//		      {
-//		        text: '<i class="ios-icons">close</i> ĐÓNG',
-//		      },
-//		      {
-//		        text: '<i class="ios-icons">forward</i> GỬI',
-//		        close: false, 
-//		        onClick: function() {
-//		        	 var km = $('#num_km_trip').val();
-//		        	 if(km != "" && Number(km) > 0){
-//		        		 Common.getLocation(function(pos){
-//			    			_.setState({latitude: pos.lat, longitude: pos.lon});
-//			    			FWPlugin.showIndicator();
-//			    			FWPlugin.closeModal();
-//			    			Common.request({type:"POST", url: '/point/update', data:{id: item.id, status: 5, latitude: _.state.latitude, longitude: _.state.longitude, num: km}}, (res)=>{
-//			    				if(res.status){
-//			    					_.updateStatusPoint(item.id, 5);
-//			    				} else {
-//			    					FWPlugin.alert('TỚI ĐIỂM GIAO THẤT BẠI');
-//			    				}
-//			    				FWPlugin.hideIndicator();
-//			    			});
-//				    	});
-//		        	 } else {
-//		        		 $('#num_km_trip').css('border: 1px solid red');
-//		        	 }
-//		        }
-//		      }]
-//		});
-		
+    	});	
 	}
 	/**
 	 * Start transfer goods
@@ -807,7 +828,6 @@ class Home extends Component{
 		      }]
 	   });
    }
-	
 	goBack(){
 		var _=this;
 		FWPlugin.modal({
@@ -848,19 +868,6 @@ class Home extends Component{
 		});
 	}
 	render(){
-//		var buttonStart = <p ref="leave_park" id="leave_park" style={{margin:'55px 20% 15px 20%'}}>
-//						  	<Link to='/home' onClick={this.leavePark.bind(this)} replace 
-//						  		className="button button-round active color-orange">
-//						  			<i className="fa fa-space-shuttle faa-passing-reverse animated" aria-hidden="true"></i> RỜI BÃI</Link>
-//						</p>;
-//		var buttonEnd = <p ref="go_back" id="go_back" style={{margin:'15px 20% 15px 20%'}}>
-//							<Link to='/home' onClick={this.goBack.bind(this)} replace className="button button-round active color-orange">
-//								<i className="fa fa-space-shuttle faa-passing animated" aria-hidden="true"></i> VỀ BÃI</Link>
-//						</p>;
-//		if(this.state.trips[0].id == "-1"){
-//			buttonStart = "";
-//			buttonEnd = "";
-//		}
 		return (
 		    	<div style={{'height': '100%'}}>
 			    	<div className="statusbar-overlay"></div>
@@ -932,8 +939,9 @@ class Home extends Component{
 					       				longitude = {this.state.longitude} 
 					       				trip_id={this.state.tripId} 
 					       				location_id = {this.state.locationId} 
-					       				trip_num={this.state.trip_num}/>
-					       </div>
+					       				trip_num={this.state.trip_num} />
+					       		<Picker location_id = {this.state.locationId} trip_id={this.state.tripId} trips={this.state.trips}/>
+					       	</div>
 				       </div>
 					   <Tabbar index="1"/>
 					</div>
@@ -1426,41 +1434,71 @@ class Picker extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			listTray: []
 		}
 	}
     componentWillMount(){
     }
     componentDidMount(){
+    	var _=this;
+    	Common.request({type:"GET", url: '/point/tray'}, (res)=>{
+			if(res.status){
+				_.setState({listTray: res.data});
+			}
+		});
     }
-    done(){
-    	FWPlugin.closeModal('.picker-react');
+    send(){
+    	var _=this;
+    	// send data to server
+    	// update status
+    	var index = _.props.trips.findIndex((x)=> x.id == _.props.trip_id);
+    	var location = _.props.trips[index].location;
+    	
+    	FWPlugin.closeModal('.popup-tray');
     }
-    cancel(){
-    	FWPlugin.closeModal('.picker-react');
+    erase(){
+    	
     }
+    inputTray(item){
+		return(
+				<li key={'tray__' + item.id} className="item-content">
+	             <div className="item-inner">
+		           <div className="item-subtitle">
+			           <div className="item-input-number">
+			             <input type="number" min="0" placeholder="SỐ LƯỢNG GIAO" />
+			           </div>
+			           <div className="item-input-number">
+			            <input type="number" min="0" placeholder="SỐ LƯỢNG TRẢ VỀ" />
+			           </div>
+		           </div>
+	             </div>
+	             <div className="item-after">
+		              {item.name}
+	             </div>
+	           </li>
+		);
+	}
     render() {
       return (
-    		  <div className="picker-modal picker-react">
-    		    <div className="toolbar">
-    		      <div className="toolbar-inner">
-    		        <div className="left">
-    		        	<Link to="/home" replace onClick={this.done.bind(this)} className="close-picker color-root">
-    		        		<i className="ios-icons">check</i> đồng ý</Link>
-    		        </div>
-    		        <div className="right">
-    		        	<Link to="/home" replace onClick={this.cancel.bind(this)} className="close-picker color-red">
-    		        		<i className="ios-icons">close</i> từ chối</Link>
-    		        </div>
-    		      </div>
-    		    </div>
-    		    <div className="picker-modal-inner">
-    		      <div className="content-block">
-    		        <h4>Có chuyến mới dành cho bạn</h4>
-    		        <p>Chuyến đi miền tây</p>
-    		        <p>Bạn có đồng ý vận chuyển?</p>
-    		      </div>
-    		    </div>
-    		  </div>
+    		  <div className="popup popup-tray page toolbar-fixed">
+			     <div className="page-content">
+				     <div className="list-block media-list list-tray">
+		  	    		<ul style={{background:'transparent'}}>
+			       	    		{this.state.listTray.map(this.inputTray, this)}
+		  	    		</ul>
+		  	    	 </div>
+			     </div>
+			     <div className="toolbar tabbar tabbar-labels">
+			        <div className="toolbar-inner">
+			          	<Link to="/home" className="tab-link" replace onClick={this.erase.bind(this)}><i className="fa fa-eraser" aria-hidden="true"></i>
+		          			<span className="tabbar-label">NHẬP LẠI TẤT CẢ</span>
+		          		</Link>
+			          	<Link to="/home" className="tab-link" replace onClick={this.send.bind(this)}><i className="ios-icons">forward</i>
+	          				<span className="tabbar-label">GỬI THÔNG TIN</span>
+	          			</Link>
+			        </div>
+			      </div> 
+			  </div>
       );
    }
 }
