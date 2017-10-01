@@ -178,6 +178,31 @@
  .badge {
     font-size: 12px;
 }
+.popup-tray{
+	input[type="number"]{
+		-webkit-appearance: none;
+	    -moz-appearance: none;
+	    -ms-appearance: none;
+	    appearance: none;
+	    background: #fff;
+	    border-radius: 20px;
+	    display: block;
+	    padding: 0;
+	    margin: 5px;
+    	width: 90%;
+	    height: 30px;
+	    color: #000;
+	    font-size: 17px;
+	    font-family: inherit;
+	    padding-left: 15px;
+	    padding-right: 15px;
+	}
+	.list-block{
+		.item-after{
+			color: @color-white; 
+		}	
+	}
+}
 .modal{
 	input{
 		-webkit-appearance: none;
@@ -192,7 +217,7 @@
 	    display: block;
 	    padding: 0;
 	    margin: 0;
-	    /* width: 100%; */
+	    width: 85%;
 	    height: 30px;
 	    color: #000;
 	    font-size: 17px;
@@ -245,7 +270,7 @@
 	}
 }
 .popup{
-	background:	url('/styles/images/bg-aba.jpg');//fade(@color-active, 100%);//url('/styles/images/bg-aba.jpg');
+	background:	fade(@color-active, 100%);//url('/styles/images/bg-aba.jpg');
 	background-repeat: no-repeat;
     background-position: bottom;
     background-size: cover;
@@ -360,8 +385,8 @@
 		height: 100%; 
 		margin: 0px; 
 		padding: 0px; 
-//		background: fade(@color-active, 80%);
-		background-image: url('/styles/images/bg-aba.jpg');
+		background: fade(@color-active, 80%);
+//		background-image: url('/styles/images/bg-aba.jpg');
 		background-repeat: no-repeat;
 	    background-position: bottom;
 	    background-size: cover;
@@ -400,8 +425,8 @@
 		display: none;
 	}
 	.panel{
-//		background: fade(@color-active, 70%);
-		background-image: url('/styles/images/bg-aba.jpg');
+		background: fade(@color-active, 70%);
+//		background-image: url('/styles/images/bg-aba.jpg');
 	    background-repeat: no-repeat;
 	    background-position: bottom;
 	    background-size: cover;

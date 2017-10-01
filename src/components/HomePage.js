@@ -123,7 +123,6 @@ class Home extends Component{
 			         		url: '/notify/reply',
 			         		data: {id: trip.id, status: 1, username: Common.user.username}
 			         	}, (res)=>{
-			         		Common.logs('accept');
 			         		Common.isShowNotify = false;
 			         		trip.status = '7'; // Chua roi bai
 			         		_.receiveTrip(trip);
@@ -169,7 +168,71 @@ class Home extends Component{
 			}
 		}
 	}
-	
+	updatePointState(){
+		var _=this;
+		var trips = this.state.trips;
+		var indexTrip = trips.findIndex((x)=> x.id == _.state.tripId);
+    	var location = trips[indexTrip].location;
+    	var index = location.findIndex((x)=> x.id == _.state.locationId);
+    	if(location[index].numPackage != -1){ // show input package
+    		FWPlugin.modal({
+    		    title:  'TMS Message',
+    		    text: 'NHẬP SỐ KIỆN GIAO',
+    		    afterText: '<input type="number" min = 0 id="num_package" placeholder="Số Kiện Giao" />',
+    		    buttons: [
+    		      {
+    		        text: '<i class="ios-icons">forward</i> GỬI',
+    		        close: false, 
+    		        onClick: function() {
+    		        	 var num = $('#num_package').val();
+    		        	 if(num != "" && Number(num) > 0){
+    		        		 FWPlugin.closeModal();
+    		        		 FWPlugin.showIndicator();
+    				    		Common.getLocation(function(pos){
+    				    			_.setState({latitude: pos.lat, longitude: pos.lon});
+    				    			Common.request({url:'/point/package', type: 'POST', 
+    			        				data: {
+    			        					id: _.state.locationId,
+    			        					latitude: _.state.latitude, 
+    			        					longitude: _.state.longitude, num: num }}, 
+    			        				function(res){
+    			        					FWPlugin.hideIndicator();
+    						        		if(res.status){
+    						        			trips[indexTrip].location[index].status = 8;
+    						        	    	_.setState({trips: trips});
+    						        		} else {
+    						        			FWPlugin.alert('KẾT NỐI THẤT BẠI');
+    						        		}
+    						        });
+    				    		});
+    		        	 } else {
+    		        		 $('#num_package').css('border: 1px solid red');
+    		        	 }
+    		        }
+    		      }]
+    	   });
+    	} else {
+    		FWPlugin.showIndicator();
+    		Common.getLocation(function(pos){
+    			_.setState({latitude: pos.lat, longitude: pos.lon});
+    			Common.request({url:'/point/update', type: 'POST', 
+    				data: {
+    					id: _.state.locationId,
+    					status: 8,
+    					latitude: _.state.latitude, 
+    					longitude: _.state.longitude }}, 
+    				function(res){
+    					FWPlugin.hideIndicator();
+		        		if(res.status){
+		        			trips[indexTrip].location[index].status = 8;
+		        	    	_.setState({trips: trips});
+		        		} else {
+		        			FWPlugin.alert('KẾT NỐI THẤT BẠI');
+		        		}
+		        });
+    		});
+    	}
+	}
 	getTrips(){
 		var _=this;
 		FWPlugin.showIndicator();
@@ -249,11 +312,14 @@ class Home extends Component{
 				 data:{id: item.id, num: 0, latitude: pos.lat, longitude: pos.lon}}, function(res){
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
-	   				 FWPlugin.alert('XÁC NHẬN RỜI BÃI THÀNH CÔNG');
 	   				 var trips = _.state.trips;
 		   			 for(var i = 0; i < trips.length; i++){
 							if(Number(trips[i].id) == item.id){
-								trips[i].status = '8';
+								trips[i].status = 2; // start delivery
+								trips[i].ware_house = res.ware_house;
+								for(var j = 0; j < trips[i].location.length; j++){
+									trips[i].location[j].status = 2;
+								}
 								_.setState({
 									trips: trips
 								});
@@ -269,25 +335,21 @@ class Home extends Component{
 	 * Come to store
 	 * 
 	 */
-	stock(item){
+	wareHouseHandler(item){
 		var _=this;
 		 Common.getLocation(function(pos){
 			 _.setState({latitude: pos.lat, longitude: pos.lon});
 			 FWPlugin.showIndicator();
+			 // STATUS: 1: Arrived ware house; 2: Leaved ware house
 			 Common.request({type:'POST', url:'/trip/warehouse', 
 				 data:{TripID: item.TripID, id: item.id, latitude: pos.lat, longitude: pos.lon, status: (Number(item.status) + 1)}}, function(res){
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
-	   				 if(item.status == 0){
-	   					 FWPlugin.alert('XÁC NHẬN ĐẾN KHO THÀNH CÔNG');
-	   				 } else if(item.status == 1){
-	   					FWPlugin.alert('XÁC NHẬN RỜI KHO THÀNH CÔNG');
-	   				 }
 	   				 var trips = _.state.trips;
 	   				 var index = trips.findIndex((x)=> x.id == item.TripID);
 	   				 var wareHouse = trips[index].ware_house;
 	   				 var length = wareHouse.length;
-	   				 var check = 0; // If all warehouse have changed status to 2 => change status Trips Index.
+	   				 var check = 0; // If only one warehouse have changed status to 2 => change status Trips Index.
 					 for(var i = 0; i < length; i++){
 						if(wareHouse[i].id == item.id){
 							wareHouse[i].status = Number(item.status) + 1;
@@ -296,9 +358,8 @@ class Home extends Component{
 							check+=1;
 						}
 					 }
-					 if(check == length){
-						trips[index].status = '1';
-						
+					 if(check > 0){
+						//trips[index].status = '1';
 					 } 
 					 trips[index].ware_house = wareHouse;
 					 _.setState({
@@ -331,7 +392,7 @@ class Home extends Component{
 				 }}, function(res){
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
-	   				FWPlugin.alert('BẮT ĐẦU NHẬN HÀNG');
+//	   				FWPlugin.alert('BẮT ĐẦU NHẬN HÀNG');
 	   				var trips = _.state.trips;
 						for(var i = 0; i < trips.length; i++){
 							if(Number(trips[i].id) == item.id){
@@ -362,7 +423,7 @@ class Home extends Component{
 				 }}, function(res){
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
-	   				FWPlugin.alert('ĐÃ NHẬN HÀNG XONG');
+//	   				FWPlugin.alert('ĐÃ NHẬN HÀNG XONG');
 	   				var trips = _.state.trips;
 						for(var i = 0; i < trips.length; i++){
 							if(Number(trips[i].id) == item.id){
@@ -392,13 +453,12 @@ class Home extends Component{
 				 }}, function(res){
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
-	   				FWPlugin.alert('CHUYẾN ĐÃ BẮT ĐẦU');
 	   				var trips = _.state.trips;
 						for(var i = 0; i < trips.length; i++){
 							if(Number(trips[i].id) == item.id){
-								trips[i].status = '2';
+								trips[i].status = 2;
 								for(var j = 0; j < trips[i].location.length; j++){
-									trips[i].location[j].status = '2';
+									trips[i].location[j].status = 2;
 								}
 								_.setState({
 									trips: trips
@@ -459,7 +519,12 @@ class Home extends Component{
 	}
 	itemDraw(item){
 		var buttonStart =  '';
-		var buttonEnd =  '';
+		var buttonEnd = <p>
+							 <Link to="/home" replace 
+								onClick={this.returnBackPaking.bind(this, item)} className="button button-round button-fill button-end">
+							 	<i className="ios-icons">forward</i> VỀ BÃI
+						     </Link>
+						 </p>
 		var buttonCancel = <Link to="/home" replace 
 								onClick={this.cancelTrips.bind(this, item)} style={{fontSize:'25px', float:'right'}}>
 							 	<i className="ios-icons color-red">close_round_fill</i> 
@@ -469,6 +534,7 @@ class Home extends Component{
 		 if(Number(item.status) == -1){
 			status = '';
 			buttonCancel = '';
+			buttonEnd = '';
 		} else if(Number(item.status) == 7){
 			status = <span className="badge bg-orange"><i className="fa fa-warning faa-flash animated" aria-hidden="true"></i> CHƯA RỜI BÃI </span>;
 			buttonStart = <p>
@@ -505,12 +571,6 @@ class Home extends Component{
 					   	     </Link>
 						</p>
 		} else if(Number(item.status) == 2){
-			buttonEnd = <p>
-							 <Link to="/home" replace 
-								onClick={this.confirm.bind(this, item)} className="button button-round button-fill button-end">
-							 	<i className="ios-icons">forward</i> VỀ BÃI
-						     </Link>
-						 </p>
 			status = <span className="badge bg-orange"><i className="fa fa-refresh fa-spin fa-fw"></i> ĐANG XỬ LÝ </span>;
 		} else if(Number(item.status) == 3){
 			buttonStart = '';
@@ -523,6 +583,11 @@ class Home extends Component{
 			buttonStart = '';
 			buttonCancel = '';
 			status = <span className="badge bg-orange"><i className="fa fa-refresh fa-spin fa-fw" aria-hidden="true"></i> HỦY (ĐỢI DUYỆT)</span>;
+		} else if(Number(item.status) == 12){
+			buttonStart = '';
+			buttonCancel = '';
+			buttonEnd = '';
+			status = <span className="badge bg-green"><i className="fa fa-check" aria-hidden="true"></i> ĐÃ VỀ BÃI</span>;
 		} 
 		return (
 			<li key={item.id} className={"accordion-item "  + "item__" + item.id}>
@@ -549,7 +614,7 @@ class Home extends Component{
 	       	        <div className="content-block">
 			       	    <div className="timeline tablet-sides">
 				       	    {buttonStart}
-				       	    <div style={{display: (item.status == '8'? 'block': 'none')}}>
+				       	    <div style={{'display': (item.status == '7' || item.status == '11'?'none':'block')}}>
 				       	    	<div className="list-block media-list list-warehouse">
 				       	    		<ul style={{background:'transparent'}}>
 					       	    		{item.ware_house.map(this.wareHouse, this)}
@@ -568,14 +633,16 @@ class Home extends Component{
 		var button = '';
 		if(item.status == 0){
 			button = <Link to="/home" replace 
-					 onClick={this.stock.bind(this, item)} className="button button-round button-fill bg-orange">
+					 onClick={this.wareHouseHandler.bind(this, item)} className="button button-round button-fill bg-orange">
 				 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> ĐẾN KHO
 		  	      </Link>
 		} else if(item.status == 1){
 			button = <Link to="/home" replace 
-					 onClick={this.stock.bind(this, item)} className="button button-round button-fill bg-orange">
+					 onClick={this.wareHouseHandler.bind(this, item)} className="button button-round button-fill bg-orange">
 				 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> RỜI KHO
 		 	      </Link>
+		} else if(item.status == 2){
+			button = <span className="badge bg-green"><i className="fa fa-check-circle" aria-hidden="true"></i> NHẬN HÀNG XONG</span>
 		}
 		return(
 				<li key={'warehouse__' + item.id} className="item-content">
@@ -737,7 +804,6 @@ class Home extends Component{
 				this.setState({trips: trips});
 			}
 		}
-		FWPlugin.alert('XÁC NHẬN THÀNH CÔNG');
 	}
 	/**
 	 * Arrived point
@@ -773,7 +839,7 @@ class Home extends Component{
 			});
 		});
 	}
-	confirm(item){
+	returnBackPaking(item){
 		var _=this;
 		FWPlugin.modal({
 		    title:  'TMS Message',
@@ -801,14 +867,15 @@ class Home extends Component{
 			        				function(res){
 			        					FWPlugin.hideIndicator();
 						        		if(res.status){
-						        			FWPlugin.alert('KẾT THÚC CHUYẾN THÀNH CÔNG');
+//						        			FWPlugin.alert('KẾT THÚC CHUYẾN THÀNH CÔNG');
 						        			var trips = _.state.trips;
 						    				for(var i = 0; i < trips.length; i++){
 						    					if(Number(trips[i].id) == item.id){
-						    						trips[i].status = '3';
+						    						trips[i].status = 12;
 						    						for(var j = 0; j < trips[i].location.length; j++){
-						    							if(trips[i].location[j].status != '3'){}
-						    							trips[i].location[j].status = '4';
+						    							if(trips[i].location[j].status != 3){
+						    								trips[i].location[j].status = 4;
+						    							}
 						    						}
 						    						_.setState({
 						    							trips: trips
@@ -817,12 +884,12 @@ class Home extends Component{
 						    				}
 						    				
 						        		} else {
-						        			FWPlugin.alert('KẾT THÚC CHUYẾN THẤT BẠI');
+						        			FWPlugin.alert('SỐ KM KHÔNG HỢP LỆ');
 						        		}
 						        });
 				    		});
 		        	 } else {
-		        		 $('#num_km_trip_end').css('border: 1px solid red');
+		        		 $('#num_km_trip_end').css({'border': '1px solid red'});
 		        	 }
 		        }
 		      }]
@@ -939,8 +1006,11 @@ class Home extends Component{
 					       				longitude = {this.state.longitude} 
 					       				trip_id={this.state.tripId} 
 					       				location_id = {this.state.locationId} 
-					       				trip_num={this.state.trip_num} />
-					       		<Picker location_id = {this.state.locationId} trip_id={this.state.tripId} trips={this.state.trips}/>
+					       				trip_num={this.state.trip_num} /> 
+					       		<Picker trip_id={this.state.tripId} 
+					       				location_id = {this.state.locationId}
+					       				trips = {this.state.trips}
+					       				updatePointState = {this.updatePointState.bind(this)} />
 					       	</div>
 				       </div>
 					   <Tabbar index="1"/>
@@ -951,6 +1021,8 @@ class Home extends Component{
 	}
 }
 
+					      	
+					      	
 class Popup extends React.Component { 
 		constructor(props) {
 			super(props);
@@ -1101,24 +1173,25 @@ class Popup extends React.Component {
 			   });
 			   return;
 		   }
-		   FWPlugin.modal({
-			    title:  'TMS Message',
-			    text: 'NHẬP SỐ KHAY GIAO/NHẬN',
-			    afterText: '<input type="number" min = 0 id="num_package" placeholder="Nhập số khay giao/nhận" />',
-			    buttons: [
-			      {
-			        text: '<i class="ios-icons">close</i> ĐÓNG',
-			        onClick: function() {
-			        }
-			      },
-			      {
-			        text: '<i class="ios-icons">forward</i> GỬI',
-			        onClick: function() {
-			        	_.handleSendInvoice();
-			        }
-			      }
-			    ]
-		   });
+		   _.handleSendInvoice();
+//		   FWPlugin.modal({
+//			    title:  'TMS Message',
+//			    text: 'NHẬP SỐ KHAY GIAO/NHẬN',
+//			    afterText: '<input type="number" min = 0 id="num_package" placeholder="Nhập số khay giao/nhận" />',
+//			    buttons: [
+//			      {
+//			        text: '<i class="ios-icons">close</i> ĐÓNG',
+//			        onClick: function() {
+//			        }
+//			      },
+//			      {
+//			        text: '<i class="ios-icons">forward</i> GỬI',
+//			        onClick: function() {
+//			        	_.handleSendInvoice();
+//			        }
+//			      }
+//			    ]
+//		   });
 	   }
 	   handleSendInvoice(){
 		   var _=this;
@@ -1449,15 +1522,33 @@ class Picker extends React.Component {
     }
     send(){
     	var _=this;
-    	// send data to server
-    	// update status
-    	var index = _.props.trips.findIndex((x)=> x.id == _.props.trip_id);
-    	var location = _.props.trips[index].location;
+    	// send data to server  
+    	var length = _.state.listTray.length;
+    	let arrReceive = [];
+    	let arrReturn = [];
+    	let arrId = [];
+    	for(let i = 0; i < length; i++){
+    		let receive = $('#num_receive_' + _.state.listTray[i].id).val() + "";
+    		let delivery = $('#num_return_' + _.state.listTray[i].id).val() + "";
+    		if(receive.length > 0 || delivery.length > 0){
+    			receive = receive.length == 0?"0": receive;
+    			delivery = delivery.length == 0?"0": delivery;
+    			let sub = receive.concat("#", delivery);
+    			arrReceive.push(receive);
+    			arrReturn.push(delivery);
+    			arrId.push(_.state.listTray[i].id);
+    		}
+    	}
+    	Common.request({type:"POST", url: '/point/tray', data:{id: _.props.location_id, listReceive: arrReceive.toString(), listReturn:arrReturn.toString(), listId: arrId.toString()}}, (res)=>{
+			if(res.status){
+				_.props.updatePointState();
+		    	FWPlugin.closeModal('.popup-tray');
+			}
+		});
     	
-    	FWPlugin.closeModal('.popup-tray');
     }
     erase(){
-    	
+    	$('.list-tray input').val('');
     }
     inputTray(item){
 		return(
@@ -1465,10 +1556,10 @@ class Picker extends React.Component {
 	             <div className="item-inner">
 		           <div className="item-subtitle">
 			           <div className="item-input-number">
-			             <input type="number" min="0" placeholder="SỐ LƯỢNG GIAO" />
+			             <input type="number" min="0" id={"num_receive_" + item.id} placeholder="SỐ LƯỢNG GIAO" />
 			           </div>
 			           <div className="item-input-number">
-			            <input type="number" min="0" placeholder="SỐ LƯỢNG TRẢ VỀ" />
+			            <input type="number" min="0" id={"num_return_" + item.id} placeholder="SỐ LƯỢNG TRẢ VỀ" />
 			           </div>
 		           </div>
 	             </div>

@@ -109,9 +109,10 @@ app.get('/trips', function(req, res){
 		var length = trips.length;
 		for(var i = 0; i < length; i++){
 			trips[i].location = [];
-			trips[i].ware_house = [];
-			trips[i].ware_house.push(result[1].find((x) => x.TripID == trips[i].id)); // undefined
+			trips[i].ware_house = result[1];
+			//trips[i].ware_house.push(result[1].find((x) => x.TripID == trips[i].id)); // undefined
 		}
+		console.dir(result[1]);
 		console.log(trips);
 		res.send({status: 1, message: 'Success', user: req.user, trips: trips});
 	});
@@ -144,7 +145,7 @@ app.post('/end', (req, res)=>{
 	var location = latitude + '@' + longitude;
 	var id = req.body.id;
 	console.dir(req.body);
-	database.goBack(id, location, num, (result) =>{
+	database.returnBackPaking(id, location, num, (result) =>{
 		res.send(result);
 	});
 	
@@ -157,7 +158,7 @@ app.post('/trip/departure', function(req, res){
 	var longitude = req.body.longitude;
 	var location = latitude + '@' + longitude;
 	var km = req.body.num;
-	database.departureTrips(id, km, (result) =>{
+	database.departureTrips(id, location, (result) =>{
 		res.send(result);
 	});
 });
@@ -181,9 +182,12 @@ app.get('/trip/warehouse/:tripId', function(req, res){
 });
 app.post('/trip/warehouse', function(req, res){
 	var id = req.body.id;
-	var tripID = req.body.tripID;
+	var tripID = req.body.TripID;
 	var status = req.body.status;
-	database.updateWareHouse(tripID, id, status, (result) =>{
+	var latitude = req.body.latitude;
+	var longitude = req.body.longitude;
+	var location = latitude + '@' + longitude;
+	database.updateWareHouse(tripID, id, status, location, (result) =>{
 		res.send(result);
 	});
 });
@@ -241,7 +245,8 @@ app.get('/detail/:tripId', function(req, res){
 				time: result[i].LastUpdate,
 				typeGoods: result[i].TypeGoods,
 				temperature: result[i].Temperature,
-				units: result[i].Units
+				units: result[i].Units,
+				numPackage: result[i].NumPackage
 			}
 			trips.push(obj);
 		}
@@ -252,8 +257,38 @@ app.post('/point/update', function(req, res){
 	var status = req.body.status;
 	var id = req.body.id;
 	var location = req.body.latitude + '@' + req.body.longitude;
+	database.updateStatusPoint(id, status, location, (result) =>{
+		res.send(result);
+	});
+});
+app.post('/point/delivery', function(req, res){
+	var status = req.body.status;
+	var id = req.body.id;
+	var location = req.body.latitude + '@' + req.body.longitude;
+	database.deliveryPoint(id, status, location, (result) =>{
+		res.send(result);
+	});
+});
+
+app.post('/point/package', function(req, res){
+	var id = req.body.id;
+	var location = req.body.latitude + '@' + req.body.longitude;
 	var num = req.body.num;
-	database.updateStatusPoint(id, status, location, num, (result) =>{
+	database.setPackage(id, num, location, (result) =>{
+		res.send(result);
+	});
+});
+app.get('/point/tray', function(req, res){
+	database.getListTray((result)=>{
+		res.send(result)
+	});
+});
+app.post('/point/tray', function(req, res){
+	var id = req.body.id;
+	var listReceive = req.body.listReceive;
+	var listReturn = req.body.listReturn;
+	var listId = req.body.listId;
+	database.setListTray(id, listReceive, listReturn, listId, (result) => {
 		res.send(result);
 	});
 });
@@ -345,7 +380,8 @@ app.get('/notify/check', function(req, res){
 				time: result[0][0].TripDate,
 				status: result[0][0].IsConfirmed,
 				trip_num : result[0][0].TripNumber,
-				location: []
+				location: [],
+				ware_house:[]
 			}
 			arr.push(obj);
 			res.send({status: 1, message: 'success', trip: arr, num_notify: result[1][0].num_notify});
@@ -489,7 +525,8 @@ io.sockets.on('connection', function(socket){
 						customer: result[i].CustomerName,
 						address:result[i].Address,
 						typeGoods: result[i].TypeGoods,
-						location: []
+						location: [],
+						ware_house:[]
 					}
 					arr.push(obj);
 				}

@@ -38,7 +38,6 @@ function ABADB() {
   }
   this.driverAssigned =  function(callback){
 	  connection.getConnection(function(err, con){
-		    
 		    // call sql query
 		    var query = "SELECT t.TripID, TripNumber, Route, DriverUser, TripDate, IsConfirmed, t.TypeGoods, CustomerName, s.Name as Address, "
 		    			+ " (SELECT Count(*)  FROM Messager WHERE Receiver=t.DriverUser and Status=0) as num_notify "
@@ -62,7 +61,7 @@ function ABADB() {
 		    con.input('DriverUser', sql.VarChar(50), username);
 		    con.input('TripID', sql.BigInt, tripId);
 		    con.input('Status', sql.Int, status);
-		    con.input('Reason', sql.NVarChar, "No content");
+		    con.input('Reason', sql.NVarChar(50), "No content");
 		    con.execute('Proc_AcceptTrip').then((result, err) => {
 		    	if(err){
 		    		console.dir(err);
@@ -134,7 +133,7 @@ function ABADB() {
   }
   this.getTrips = function(username, callback){
 	  connection.getConnection(function(err, con){
-		  con.input('username', sql.VarChar, username);
+		  con.input('username', sql.VarChar(50), username);
 		  con.execute('Proc_GetTrip').then((result, err) => {
 		    	if(err){
 		    		console.dir(err);
@@ -191,25 +190,41 @@ function ABADB() {
 			});
 	  });
   }
-  this.departureTrips = function(id, num_km, callback){
+  this.departureTrips = function(id, location, callback){
 	  connection.getConnection(function(err, con){
-		    // call sql query
-		    var query = "UPDATE Trips SET KM_Start=@KM_Start, TimeLeave=GETDATE(), IsConfirmed = 8" +
-		    		" Where TripID = @ID";
-		    con.input('ID', sql.BigInt, id);
-		    con.input('KM_Start', sql.Int, num_km);
-			con.query(query, (err, result) => {
-				if(err){
+		   // call sql query
+		  // STATUS = 2 Bat dau giao hang
+//		    var query = "UPDATE Trips SET KM_Start=@KM_Start, TimeLeave=GETDATE(), IsConfirmed = 2" +
+//		    		" Where TripID = @ID";
+//		    con.input('ID', sql.BigInt, id);
+//		    con.input('KM_Start', sql.Int, num_km);
+//			con.query(query, (err, result) => {
+//				if(err){
+//		    		console.dir(err);
+//		    		callback({status: 0, message: 'FAIL', error_code: 5076});
+//		    		return;
+//		    	}
+//				if(typeof result === 'undefined'){
+//					callback({status: 0, message: 'FAIL', error_code: 5076});
+//					return;
+//				}
+//				callback({status: 1, message: 'DEPARTURE SUCCESS'});
+//			});
+		    con.input('TripID', sql.BigInt, id);
+		  	con.input('Location', sql.VarChar(150), location);
+		  	con.execute('Proc_StartTrip').then((result, err) => {
+		    	if(err){
+		    		common.log('SOMETHING WRONG WHEN START TRIP');
 		    		console.dir(err);
-		    		callback({status: 0, message: 'FAIL', error_code: 5076});
+		    		callback({status: 0, message: 'FAIL', error_code: 504});
 		    		return;
 		    	}
-				if(typeof result === 'undefined'){
-					callback({status: 0, message: 'FAIL', error_code: 5076});
-					return;
-				}
-				callback({status: 1, message: 'DEPARTURE SUCCESS'});
-			});
+		       common.log('START TRIP');
+		       console.dir(result);
+		       callback({ware_house: result.recordset, status: 1, message: 'SUCCESS'});
+		    }).catch(function(err) { 
+		      console.log(err);
+		    });
 	  });
   }
   this.stock = function(id, num_km, callback){
@@ -252,12 +267,16 @@ function ABADB() {
 			});
 	  });
   }
-  this.updateWareHouse = function(tripID, id, status, callback){
+  this.updateWareHouse = function(tripID, id, status, location, callback){
 	  connection.getConnection(function(err, con){
-		  var query = 'UPDATE SET Status=@Status FROM Trip_WareHouse WHERE ID=@ID AND TripID=@TripID';
+		  var query = 'UPDATE Trip_WareHouse SET Status=@Status, Location=@Location, ArriveTime=GETDATE() WHERE ID=@ID AND TripID=@TripID';
+		  if(status == 1){
+			  query = 'UPDATE Trip_WareHouse SET Status=@Status, Location=@Location, DepartureTime=GETDATE() WHERE ID=@ID AND TripID=@TripID';
+		  }
 		  con.input('TripID', sql.BigInt, tripID);
 		  con.input('ID', sql.BigInt, id);
 		  con.input('Status', sql.Int, status);
+		  con.input('Location', sql.VarChar, location);
 		  con.query(query, (err, result)=>{
 			  if(err){
 		    		console.dir(err);
@@ -349,7 +368,7 @@ function ABADB() {
 		    });
 	  });
   }
-  this.goBack = function(id, location, num, callback){
+  this.returnBackPaking = function(id, location, num, callback){
 	  connection.getConnection((er, con)=>{
 		  con.input('TripID', sql.BigInt, id);
 		  con.input('Location', sql.VarChar(150), location);
@@ -360,9 +379,9 @@ function ABADB() {
 		    		callback({status: 0, message: 'FAIL', error_code: 501});
 		    		return;
 		    	}
-		       common.log('This is result END TRIP');
+		       common.log('END TRIP');
 		       console.dir(result);
-		       callback({status: 1, message: 'SUCCESS'});
+		       callback({status: result.recordset[0].status, message: 'SUCCESS'});
 		    }).catch(function(err) { 
 		      console.log(err);
 		  });
@@ -372,7 +391,7 @@ function ABADB() {
 	  connection.getConnection(function(err, con){
 		    // call sql query
 		    var query = "SELECT d.TripDetailID, d.IsComplete, d.Address, d.LocationName, "
-		    	+" FORMAT(d.LastUpdate, 'dd/MM/yyyy hh:mm:ss') as LastUpdate, d.TypeGoods, d.Temperature, d.Units"
+		    	+" FORMAT(d.LastUpdate, 'dd/MM/yyyy hh:mm:ss') as LastUpdate, d.TypeGoods, d.Temperature, d.Units, d.NumPackage"
 		    	+' FROM TripDetails d '
 		    	+' WHERE d.TripID = @id'
 		    	+' ORDER BY d.LocationIndex ASC';
@@ -383,20 +402,82 @@ function ABADB() {
 			});
 	  });
   }
-  this.updateStatusPoint = function(id, status, location, num, callback){ 
+  this.updateStatusPoint = function(id, status, location, callback){ 
 	  connection.getConnection(function(err, con){
 		    // call sql query
-		    var query = "Update TripDetails Set IsComplete = @Status, Location1=@Location, Time1=GETDATE(), Kilometre = @KM_Start WHERE TripDetailID = @ID";
-		  	if(status == 6){
+		    var query = "Update TripDetails Set IsComplete = @Status, Location1=@Location, Time1=GETDATE() WHERE TripDetailID = @ID";
+		  	if(status == 8){
 		  		query = "Update TripDetails Set IsComplete = @Status, Location2=@Location, Time2=GETDATE() WHERE TripDetailID = @ID";
 		  	}
 		  	con.input('ID', sql.BigInt, id);
 		  	con.input('Status', sql.Int, status);
 		  	con.input('Location', sql.VarChar(250), location);
-		  	con.input('KM_Start', sql.Int, num);
 			con.query(query, (err, result) => {
 				if(err){
 					callback({status: 0, message: 'FAIL', error: '4321'});
+					return;
+				}
+				console.dir(result);
+				callback({status: 1, message: 'SUCCESS'}); 
+			});
+	  });
+  }
+  this.setPackage = function(id, num, location, callback){ 
+	  connection.getConnection(function(err, con){
+		    // call sql query
+		    var query = "Update TripDetails Set IsComplete = 8, NumPackage=@Num, Location2=@Location, Time2=GETDATE() WHERE TripDetailID = @ID";
+		  	con.input('ID', sql.BigInt, id);
+		  	con.input('Num', sql.Int, num);
+		  	con.input('Location', sql.VarChar(250), location);
+			con.query(query, (err, result) => {
+				if(err){
+					callback({status: 0, message: 'FAIL', error: '4331'});
+					return;
+				}
+				console.dir(result);
+				callback({status: 1, message: 'SUCCESS'}); 
+			});
+	  });
+  }
+  this.deliveryPoint = function(id, status, location, callback){ 
+	  connection.getConnection(function(err, con){
+		  	con.input('ID', sql.BigInt, id);
+		  	con.input('Status', sql.Int, status);
+		  	con.input('Location', sql.VarChar(250), location);
+			con.execute('Proc_Status_Point').then((result, err) => {
+				if(err){
+					console.dir(err);
+					callback({status: 0, message: 'FAIL', error: '4901'});
+					return;
+				}
+				console.dir(result);
+				callback({status: 1, message: 'SUCCESS'}); 
+			});
+	  });
+  }
+  this.getListTray = function(callback){
+	  connection.getConnection(function(err, con){
+		    // call sql query
+		    var query = 'SELECT TrayID as id, Name as name, Type as type FROM Tray ORDER BY TrayID ASC';
+			con.query(query, (err, result) => {
+				if(err){
+					console.dir(err);
+					callback({status: 0, message: 'FAIL', error: '4902'});
+				}
+				callback({status: 1, data: result.recordset, message: 'SUCCESS'});
+			});
+	  });
+  }
+  this.setListTray = function(id, listReceive, listReturn, listId, callback){
+	  connection.getConnection(function(err, con){
+		  	con.input('ID', sql.BigInt, id);
+		  	con.input('ListReceive', sql.VarChar(500), listReceive);
+		  	con.input('ListReturn', sql.VarChar(500), listReturn);
+		  	con.input('ListID', sql.VarChar(500), listId);
+			con.execute('Proc_SetTray').then((result, err) => {
+				if(err){
+					console.dir(err);
+					callback({status: 0, message: 'FAIL', error: '4901'});
 					return;
 				}
 				console.dir(result);

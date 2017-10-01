@@ -54,7 +54,7 @@ class Login extends React.Component{
 				location.href="/#/home";
 			} else {
 				FWPlugin.modal({
-					title: 'ABA Cooltrans',
+					title: 'TMS Message',
 					text: '<p class="color-red"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> ĐĂNG NHẬP THẤT BẠI !</p>', 
 					buttons: [
 					     {text: '<span class="color-red"><i class="ios-icons">close</i> ĐÓNG</span>', bold: true}
