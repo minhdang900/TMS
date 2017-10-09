@@ -192,31 +192,14 @@ function ABADB() {
   }
   this.departureTrips = function(id, location, callback){
 	  connection.getConnection(function(err, con){
-		   // call sql query
-		  // STATUS = 2 Bat dau giao hang
-//		    var query = "UPDATE Trips SET KM_Start=@KM_Start, TimeLeave=GETDATE(), IsConfirmed = 2" +
-//		    		" Where TripID = @ID";
-//		    con.input('ID', sql.BigInt, id);
-//		    con.input('KM_Start', sql.Int, num_km);
-//			con.query(query, (err, result) => {
-//				if(err){
-//		    		console.dir(err);
-//		    		callback({status: 0, message: 'FAIL', error_code: 5076});
-//		    		return;
-//		    	}
-//				if(typeof result === 'undefined'){
-//					callback({status: 0, message: 'FAIL', error_code: 5076});
-//					return;
-//				}
-//				callback({status: 1, message: 'DEPARTURE SUCCESS'});
-//			});
 		    con.input('TripID', sql.BigInt, id);
 		  	con.input('Location', sql.VarChar(150), location);
+//		  	con.input('KM_Start', sql.BigInt, km);
 		  	con.execute('Proc_StartTrip').then((result, err) => {
 		    	if(err){
 		    		common.log('SOMETHING WRONG WHEN START TRIP');
 		    		console.dir(err);
-		    		callback({status: 0, message: 'FAIL', error_code: 504});
+		    		callback({status: 0, message: 'FAIL', error_code: 5076});
 		    		return;
 		    	}
 		       common.log('START TRIP');
@@ -269,9 +252,11 @@ function ABADB() {
   }
   this.updateWareHouse = function(tripID, id, status, location, callback){
 	  connection.getConnection(function(err, con){
-		  var query = 'UPDATE Trip_WareHouse SET Status=@Status, Location=@Location, ArriveTime=GETDATE() WHERE ID=@ID AND TripID=@TripID';
-		  if(status == 1){
-			  query = 'UPDATE Trip_WareHouse SET Status=@Status, Location=@Location, DepartureTime=GETDATE() WHERE ID=@ID AND TripID=@TripID';
+		  var query = 'UPDATE Trip_WareHouse SET Status=@Status, Location_Arr=@Location, ArriveTime=GETDATE() WHERE ID=@ID AND TripID=@TripID';
+		  if(status == 2){
+			  query = 'UPDATE Trip_WareHouse SET Status=@Status, Location_Rec=@Location, ReceiveGoodsTime=GETDATE() WHERE ID=@ID AND TripID=@TripID';
+		  } else if(status == 3){
+			  query = 'UPDATE Trip_WareHouse SET Status=@Status, Location_Dep=@Location, DepartureTime=GETDATE() WHERE ID=@ID AND TripID=@TripID';
 		  }
 		  con.input('TripID', sql.BigInt, tripID);
 		  con.input('ID', sql.BigInt, id);
@@ -389,16 +374,15 @@ function ABADB() {
   }
   this.getTripDetailById = function(id, callback){ 
 	  connection.getConnection(function(err, con){
-		    // call sql query
-		    var query = "SELECT d.TripDetailID, d.IsComplete, d.Address, d.LocationName, "
-		    	+" FORMAT(d.LastUpdate, 'dd/MM/yyyy hh:mm:ss') as LastUpdate, d.TypeGoods, d.Temperature, d.Units, d.NumPackage"
-		    	+' FROM TripDetails d '
-		    	+' WHERE d.TripID = @id'
-		    	+' ORDER BY d.LocationIndex ASC';
-		  	con.input('id', sql.Int, id);
-			con.query(query, (err, result) => {
-//				console.dir(result);
-				callback(result.recordset); 
+			con.input('ID', sql.BigInt, id);
+			con.execute('Pro_GetTripDetail').then((result, err) => {
+				if(err){
+					console.dir(err);
+					callback({status: 0, message: 'FAIL', error: '4901'});
+					return;
+				}
+				console.dir(result);
+				callback(result.recordsets); 
 			});
 	  });
   }
