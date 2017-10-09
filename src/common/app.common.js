@@ -50,7 +50,7 @@ eCommon.getLocation = function(callback){
 	    	 clearInterval(time);
 	    	 callback({lat: 0, lon: 0});
 	         TSM.TRANSPORTER = null;  
-	    }, 7000);
+	    }, 15000);
 	} else {
 		callback({'lat':'0','lon':'0'}); 
 	} 

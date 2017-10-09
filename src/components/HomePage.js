@@ -73,6 +73,9 @@ class Home extends Component{
 	receiveNotify(data){
 		var _=this;
 		console.log(data);
+		if(Common.user == undefined){
+			return;
+		}
 		var trip = data.trip.find(function(element){
 			return element.username.toUpperCase() == Common.user.username.toUpperCase();
 		});
@@ -1212,80 +1215,81 @@ class Popup extends React.Component {
 	   	   }, function(res){
 			 FWPlugin.hideIndicator();
 	   		 if(Number(res.status) == 1){
-			   var option =  '<select id="user-rating">'
-							+  ' <option value="1">1</option>'
-							+  ' <option value="2">2</option>'
-							+  ' <option value="3">3</option>'
-							+  ' <option value="4">4</option>'
-							+  ' <option value="5">5</option>'
-							+ '</select>'
-			   FWPlugin.modal({
-				    title:  'TMS Message',
-				    text: 'ĐÁNH GIÁ DỊCH VỤ GIAO/NHẬN' + option,
-					afterText: '<input type="password" name="user-rating" id="user-rating" placeholder="NHẬP MÃ KHÁCH HÀNG" />',
-				    buttons: [
-				      {
-				        text: '<i class="ios-icons">close</i> ĐÓNG',
-				        onClick: function() {
-				        	 _.setState({isChange: false});
-				        	 // update trip
-				        	 _.props.updateTrip();
-				        }
-				      },
-				      {
-				        text: '<i class="ios-icons">forward</i> GỬI',
-				        onClick: function() {
-				        	var customerCode = $('#user-rating').val();
-				        	if(customerCode == ""){
-				        		return false;
-				        	}
-				        	 _.setState({isChange: false});
-				        	 // update trip
-				        	 _.props.updateTrip();
-				        	 // send rating
-				        	 Common.request({url:'/send/rating', data: {
-				        		 				tripId: _.props.trip_id, 
-				  			   					tripDetailId: _.props.location_id, rating: _.state.rating, customer_code: customerCode }, type: "POST"}, function(res){
-				        		 if(res.status){
-				        			 FWPlugin.modal({
-						 				    title:  'TMS Message',
-						 				    text: 'GỬI ĐÁNH GIÁ THÀNH CÔNG',
-						 				    buttons: [
-						 				      {
-						 				        text: '<i class="ios-icons">close</i> ĐÓNG',
-						 				        onClick: function(){
-						 				        	_.setState({
-										        		isChange: false, 
-										        		images:[],
-														cards:[{
-															id:'-1',
-															name: 'Chưa có hóa đơn được chọn',
-															image: '',
-															time: Common.getDateTime()
-														 }]
-										        	});
-										        	FWPlugin.closeModal('.popup-confirm');
-						 				        }
-						 				      }]
-						        		 });
-				        		 }
-				        	 });
-				        }
-				      }]
-			   });
-			   $$('.modal').on('modal:opened', function(){
-				 $('#user-rating').barrating({
-					theme: 'fontawesome-stars',
-					initialRating: 5,
-					showVlaues: true,
-					readonly: false,
-					onSelect:function(value, text, event){
-						var rating = value;
-						_.setState({rating: rating});
-					}
-				  });
-		   
-				});
+	   			FWPlugin.closeModal('.popup-confirm');
+//			   var option =  '<select id="user-rating">'
+//							+  ' <option value="1">1</option>'
+//							+  ' <option value="2">2</option>'
+//							+  ' <option value="3">3</option>'
+//							+  ' <option value="4">4</option>'
+//							+  ' <option value="5">5</option>'
+//							+ '</select>'
+//			   FWPlugin.modal({
+//				    title:  'TMS Message',
+//				    text: 'ĐÁNH GIÁ DỊCH VỤ GIAO/NHẬN' + option,
+//					afterText: '<input type="password" name="user-rating" id="user-rating" placeholder="NHẬP MÃ KHÁCH HÀNG" />',
+//				    buttons: [
+//				      {
+//				        text: '<i class="ios-icons">close</i> ĐÓNG',
+//				        onClick: function() {
+//				        	 _.setState({isChange: false});
+//				        	 // update trip
+//				        	 _.props.updateTrip();
+//				        }
+//				      },
+//				      {
+//				        text: '<i class="ios-icons">forward</i> GỬI',
+//				        onClick: function() {
+//				        	var customerCode = $('#user-rating').val();
+//				        	if(customerCode == ""){
+//				        		return false;
+//				        	}
+//				        	 _.setState({isChange: false});
+//				        	 // update trip
+//				        	 _.props.updateTrip();
+//				        	 // send rating
+//				        	 Common.request({url:'/send/rating', data: {
+//				        		 				tripId: _.props.trip_id, 
+//				  			   					tripDetailId: _.props.location_id, rating: _.state.rating, customer_code: customerCode }, type: "POST"}, function(res){
+//				        		 if(res.status){
+//				        			 FWPlugin.modal({
+//						 				    title:  'TMS Message',
+//						 				    text: 'GỬI ĐÁNH GIÁ THÀNH CÔNG',
+//						 				    buttons: [
+//						 				      {
+//						 				        text: '<i class="ios-icons">close</i> ĐÓNG',
+//						 				        onClick: function(){
+//						 				        	_.setState({
+//										        		isChange: false, 
+//										        		images:[],
+//														cards:[{
+//															id:'-1',
+//															name: 'Chưa có hóa đơn được chọn',
+//															image: '',
+//															time: Common.getDateTime()
+//														 }]
+//										        	});
+//										        	FWPlugin.closeModal('.popup-confirm');
+//						 				        }
+//						 				      }]
+//						        		 });
+//				        		 }
+//				        	 });
+//				        }
+//				      }]
+//			   });
+//			   $$('.modal').on('modal:opened', function(){
+//				 $('#user-rating').barrating({
+//					theme: 'fontawesome-stars',
+//					initialRating: 5,
+//					showVlaues: true,
+//					readonly: false,
+//					onSelect:function(value, text, event){
+//						var rating = value;
+//						_.setState({rating: rating});
+//					}
+//				  });
+//		   
+//				});
 		   }
 	     });
 	   }
