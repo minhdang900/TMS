@@ -326,6 +326,15 @@
 		}
 		.item-title{
 			color: @color-white-bold;
+			-webkit-flex-shrink: 1;
+		    -ms-flex: 0 1 auto;
+		    flex-shrink: 1;
+		    min-width: 0;
+		    white-space: initial;
+		    position: relative;
+		    overflow: initial; 
+		    text-overflow: initial; 
+		    max-width: 100%;
 		}
 	   	.item-text {
 		    font-size: 16px;
@@ -351,18 +360,10 @@
 		    color: @color-white !important;
      }
    }
-   .timeline-item-date {
-	    -webkit-flex-shrink: 0;
-	    -ms-flex: 0 0 auto;
-	    flex-shrink: 0;
-	    width: 100px;
-	    text-align: right;
-	    box-sizing: border-box;
-	    color: @color-white-bold;
-	    
-	}
+   
 	.timeline{
 		margin: 5px 0;
+		padding: 0 5px;
 		.button {
 		    border: 1px solid @color-root;
 		    color: @color-root;
@@ -380,7 +381,16 @@
 		    color: @color-white-bold;
 		}
 	}
-	
+	.timeline-item-date {
+	    -webkit-flex-shrink: 0;
+	    -ms-flex: 0 0 auto;
+	    flex-shrink: 0;
+	    width: 100px;
+	    text-align: right;
+	    box-sizing: border-box;
+	    color: @color-white-bold;
+	    
+	}
 	.page{
 		height: 100%; 
 		margin: 0px; 

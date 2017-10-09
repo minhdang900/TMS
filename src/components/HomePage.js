@@ -81,7 +81,7 @@ class Home extends Component{
 		}
 		if(trip.username.toUpperCase() == Common.user.username.toUpperCase()){
 			if(Common.isShowNotify || !Common.user.login){
-				return false;
+				return;
 			}
 			Common.num_notify = trip.num_notify;
 			if(Common.num_notify > 0){
@@ -258,7 +258,7 @@ class Home extends Component{
 		var _=this;
 		var id = item.id; 
 		// update TripID current
-		_.setState({tripId: id, trip_num: item.trip_num.replace('/', '')});
+//		_.setState({tripId: id, trip_num: item.trip_num.replace('/', '')});
 		Common.request({
 			url :'/detail/' + id,
 			type: 'GET'
@@ -276,10 +276,11 @@ class Home extends Component{
 							count +=1;
 						}
 					});
+					trips[i].ware_house = res.ware_house;
 					if(count == trips[i].location.length){
 						isAllowEnd = true;
 					}
-					_.setState({trips: trips, isAllowEnd: isAllowEnd});
+					_.setState({trips: trips, isAllowEnd: isAllowEnd, tripId: id, trip_num: item.trip_num.replace('/', '')});
 					FWPlugin.accordionToggle('.item__' + id);	
 					return;
 				}
@@ -309,7 +310,7 @@ class Home extends Component{
 			 _.setState({latitude: pos.lat, longitude: pos.lon});
 			 FWPlugin.showIndicator();
 			 Common.request({type:'POST', url:'/trip/departure', 
-				 data:{id: item.id, num: 0, latitude: pos.lat, longitude: pos.lon}}, function(res){
+				 data:{id: item.id, num: 0, latitude: pos.lat, longitude: pos.lon, num: 0}}, function(res){
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
 	   				 var trips = _.state.trips;
@@ -329,7 +330,7 @@ class Home extends Component{
 	   				 FWPlugin.alert('RỜI BÃI THẤT BẠI');
 	   			 }
 	   		}); 
-		 });
+		 });	
 	}
 	/**
 	 * Come to store
@@ -337,30 +338,25 @@ class Home extends Component{
 	 */
 	wareHouseHandler(item){
 		var _=this;
+		var _status = Number(item.status) + 1;
 		 Common.getLocation(function(pos){
 			 _.setState({latitude: pos.lat, longitude: pos.lon});
 			 FWPlugin.showIndicator();
-			 // STATUS: 1: Arrived ware house; 2: Leaved ware house
+			 // STATUS: 1: Arrived ware house; 2: Receive Goods; 3: Leaved ware house
 			 Common.request({type:'POST', url:'/trip/warehouse', 
-				 data:{TripID: item.TripID, id: item.id, latitude: pos.lat, longitude: pos.lon, status: (Number(item.status) + 1)}}, function(res){
+				 data:{TripID: item.TripID, id: item.id, latitude: _.state.latitude, longitude: _.state.longitude, status: _status }}, function(res){
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
 	   				 var trips = _.state.trips;
 	   				 var index = trips.findIndex((x)=> x.id == item.TripID);
 	   				 var wareHouse = trips[index].ware_house;
 	   				 var length = wareHouse.length;
-	   				 var check = 0; // If only one warehouse have changed status to 2 => change status Trips Index.
+	   				 var check = 0; // If only one warehouse have changed status to 3 => change status Trips Index.
 					 for(var i = 0; i < length; i++){
 						if(wareHouse[i].id == item.id){
-							wareHouse[i].status = Number(item.status) + 1;
-						}
-						if(wareHouse[i].status == 2){
-							check+=1;
+							wareHouse[i].status = _status;
 						}
 					 }
-					 if(check > 0){
-						//trips[index].status = '1';
-					 } 
 					 trips[index].ware_house = wareHouse;
 					 _.setState({
 						trips: trips
@@ -374,6 +370,7 @@ class Home extends Component{
 	   			 } 
 	   		 });
 		 });
+		 
 	}
 	/**
 	 * Receive Goods
@@ -392,7 +389,6 @@ class Home extends Component{
 				 }}, function(res){
 	   			 FWPlugin.hideIndicator();
 	   			 if(res.status){
-//	   				FWPlugin.alert('BẮT ĐẦU NHẬN HÀNG');
 	   				var trips = _.state.trips;
 						for(var i = 0; i < trips.length; i++){
 							if(Number(trips[i].id) == item.id){
@@ -611,9 +607,9 @@ class Home extends Component{
 	       	        </div>
      	          </Link>
 	       	      <div className="accordion-item-content">
-	       	        <div className="content-block">
+	       	        <div>
 			       	    <div className="timeline tablet-sides">
-				       	    {buttonStart}
+				       	    {item.location.length > 0? buttonStart:''}
 				       	    <div style={{'display': (item.status == '7' || item.status == '11'?'none':'block')}}>
 				       	    	<div className="list-block media-list list-warehouse">
 				       	    		<ul style={{background:'transparent'}}>
@@ -639,9 +635,14 @@ class Home extends Component{
 		} else if(item.status == 1){
 			button = <Link to="/home" replace 
 					 onClick={this.wareHouseHandler.bind(this, item)} className="button button-round button-fill bg-orange">
-				 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> RỜI KHO
+				 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> NHẬN HÀNG
 		 	      </Link>
 		} else if(item.status == 2){
+			button = <Link to="/home" replace 
+					 onClick={this.wareHouseHandler.bind(this, item)} className="button button-round button-fill bg-orange">
+				 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> RỜI KHO
+			      </Link>
+		}	else if(item.status == 3){
 			button = <span className="badge bg-green"><i className="fa fa-check-circle" aria-hidden="true"></i> NHẬN HÀNG XONG</span>
 		}
 		return(
