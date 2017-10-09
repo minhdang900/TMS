@@ -389,9 +389,9 @@ function ABADB() {
   this.updateStatusPoint = function(id, status, location, callback){ 
 	  connection.getConnection(function(err, con){
 		    // call sql query
-		    var query = "Update TripDetails Set IsComplete = @Status, Location1=@Location, Time1=GETDATE() WHERE TripDetailID = @ID";
+		    var query = "Update TripDetails Set IsComplete = @Status, Location1=@Location, Time_1=GETDATE() WHERE TripDetailID = @ID";
 		  	if(status == 8){
-		  		query = "Update TripDetails Set IsComplete = @Status, Location2=@Location, Time2=GETDATE() WHERE TripDetailID = @ID";
+		  		query = "Update TripDetails Set IsComplete = @Status, Location2=@Location, Time_4=GETDATE() WHERE TripDetailID = @ID";
 		  	}
 		  	con.input('ID', sql.BigInt, id);
 		  	con.input('Status', sql.Int, status);
@@ -409,7 +409,7 @@ function ABADB() {
   this.setPackage = function(id, num, location, callback){ 
 	  connection.getConnection(function(err, con){
 		    // call sql query
-		    var query = "Update TripDetails Set IsComplete = 8, NumPackage=@Num, Location2=@Location, Time2=GETDATE() WHERE TripDetailID = @ID";
+		    var query = "Update TripDetails Set IsComplete = 8, NumPackage=@Num, Location2=@Location, Time_4=GETDATE() WHERE TripDetailID = @ID";
 		  	con.input('ID', sql.BigInt, id);
 		  	con.input('Num', sql.Int, num);
 		  	con.input('Location', sql.VarChar(250), location);
