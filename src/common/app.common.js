@@ -37,7 +37,7 @@ eCommon.getLocation = function(callback){
 				 if(TSM.TRANSPORTER == -1){
 					clearInterval(time);
 					TSM.TRANSPORTER = null;  
-					callback({lat: 0, lon: 0});
+					callback({lat: -1, lon: -1});
 					return;
 				}
 	            clearInterval(time);
@@ -46,13 +46,13 @@ eCommon.getLocation = function(callback){
 	            TSM.TRANSPORTER = null;   
 			 } 
 		 }, 1);
-	    setTimeout(function(){
-	    	 clearInterval(time);
-	    	 callback({lat: 0, lon: 0});
-	         TSM.TRANSPORTER = null;  
-	    }, 15000);
+//	    setTimeout(function(){
+//	    	 clearInterval(time);
+//	    	 callback({lat: -2, lon: -2});
+//	         TSM.TRANSPORTER = null;  
+//	    }, 1000);
 	} else {
-		callback({'lat':'0','lon':'0'}); 
+		callback({'lat':'-3','lon':'-3'}); 
 	} 
 	
 }

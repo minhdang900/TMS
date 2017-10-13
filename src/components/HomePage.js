@@ -113,7 +113,7 @@ class Home extends Component{
 			         		data: {id: trip.id, status: 0, username: Common.user.username}
 			         	}, (res)=>{
 			         		_.isShowNotify = false;
-			         		trip.status = 11;
+			         		trip.status = 4;
 			         		_.receiveTrip(trip);
 			         	});
 			        }
@@ -319,11 +319,11 @@ class Home extends Component{
 	   				 var trips = _.state.trips;
 		   			 for(var i = 0; i < trips.length; i++){
 							if(Number(trips[i].id) == item.id){
-								trips[i].status = 2; // start delivery
+								trips[i].status = 8; // start delivery
 								trips[i].ware_house = res.ware_house;
-								for(var j = 0; j < trips[i].location.length; j++){
-									trips[i].location[j].status = 2;
-								}
+//								for(var j = 0; j < trips[i].location.length; j++){
+//									trips[i].location[j].status = 2;
+//								}
 								_.setState({
 									trips: trips
 								});
@@ -345,7 +345,7 @@ class Home extends Component{
 		 Common.getLocation(function(pos){
 			 _.setState({latitude: pos.lat, longitude: pos.lon});
 			 FWPlugin.showIndicator();
-			 // STATUS: 1: Arrived ware house; 2: Receive Goods; 3: Leaved ware house
+			 // STATUS: 0: Disable, 2: Arrived ware house; 3: Receive Goods; 4: Leaved ware house
 			 Common.request({type:'POST', url:'/trip/warehouse', 
 				 data:{TripID: item.TripID, id: item.id, latitude: _.state.latitude, longitude: _.state.longitude, status: _status }}, function(res){
 	   			 FWPlugin.hideIndicator();
@@ -353,12 +353,26 @@ class Home extends Component{
 	   				 var trips = _.state.trips;
 	   				 var index = trips.findIndex((x)=> x.id == item.TripID);
 	   				 var wareHouse = trips[index].ware_house;
+	   				 var indexWareHouse = wareHouse.findIndex((x)=> x.id == item.id);
 	   				 var length = wareHouse.length;
-	   				 var check = 0; // If only one warehouse have changed status to 3 => change status Trips Index.
+	   				 var check = 0; // If only one warehouse have changed status to 4 => change status Trips Index.
 					 for(var i = 0; i < length; i++){
 						if(wareHouse[i].id == item.id){
 							wareHouse[i].status = _status;
 						}
+					 }
+					 if(_status == 4){
+						 // When received warehouse first
+						 if(item.id == trips[index].ware_house[0].id){
+							 trips[index].status = 2; // start delivery
+							 for(var j = 0; j < trips[index].location.length; j++){
+								trips[index].location[j].status = 2;
+							 }
+						 }
+						 // set status next warehouse
+						 if(indexWareHouse+1 < length){
+							 wareHouse[indexWareHouse+1].status = 1;
+						 }
 					 }
 					 trips[index].ware_house = wareHouse;
 					 _.setState({
@@ -631,21 +645,23 @@ class Home extends Component{
 	wareHouse(item){
 		var button = '';
 		if(item.status == 0){
+			button = <span className="badge"><i className="fa fa-check-circle" aria-hidden="true"></i> CHƯA ĐẾN KHO</span>
+		} if(item.status == 1){
 			button = <Link to="/home" replace 
-					 onClick={this.wareHouseHandler.bind(this, item)} className="button button-round button-fill bg-orange">
-				 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> ĐẾN KHO
-		  	      </Link>
-		} else if(item.status == 1){
+			 onClick={this.wareHouseHandler.bind(this, item)} className="button button-round button-fill bg-orange">
+		 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> ĐẾN KHO
+ 	      </Link>
+		} else if(item.status == 2){
 			button = <Link to="/home" replace 
 					 onClick={this.wareHouseHandler.bind(this, item)} className="button button-round button-fill bg-orange">
 				 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> NHẬN HÀNG
 		 	      </Link>
-		} else if(item.status == 2){
+		} else if(item.status == 3){
 			button = <Link to="/home" replace 
 					 onClick={this.wareHouseHandler.bind(this, item)} className="button button-round button-fill bg-orange">
 				 	 <i className="fa fa-circle-o faa-burst animated" aria-hidden="true"></i> RỜI KHO
 			      </Link>
-		}	else if(item.status == 3){
+		}	else if(item.status == 4){
 			button = <span className="badge bg-green"><i className="fa fa-check-circle" aria-hidden="true"></i> NHẬN HÀNG XONG</span>
 		}
 		return(
@@ -1215,6 +1231,18 @@ class Popup extends React.Component {
 	   	   }, function(res){
 			 FWPlugin.hideIndicator();
 	   		 if(Number(res.status) == 1){
+	        	 // update trip
+	        	 _.setState({
+		        		isChange: false, 
+		        		images:[],
+						cards:[{
+							id:'-1',
+							name: 'Chưa có hóa đơn được chọn',
+							image: '',
+							time: Common.getDateTime()
+						 }]
+		        	});
+	        	 _.props.updateTrip();
 	   			FWPlugin.closeModal('.popup-confirm');
 //			   var option =  '<select id="user-rating">'
 //							+  ' <option value="1">1</option>'

@@ -109,12 +109,12 @@ app.get('/trips', function(req, res){
 		var length = trips.length;
 		for(var i = 0; i < length; i++){
 			trips[i].location = [];
-			trips[i].ware_house = result[1];
+			trips[i].ware_house = [];
 			//trips[i].ware_house.push(result[1].find((x) => x.TripID == trips[i].id)); // undefined
 		}
-		console.dir(result[1]);
-		console.log(trips);
-		res.send({status: 1, message: 'Success', user: req.user, trips: trips});
+//		console.dir(result[1]);
+//		console.log(trips);
+		res.send({status: 1, message: 'SUCCESS', user: req.user, trips: trips});
 	});
 });
 app.post('/leave', (req, res)=>{
@@ -235,22 +235,8 @@ app.get('/detail/:tripId', function(req, res){
 	var id = req.params.tripId;
 	database.getTripDetailById(id, (result) =>{
 		var length = result.length;
-		trips = [];
-		for(var i = 0; i < length; i++){
-			var obj = {
-				id: result[i].TripDetailID,
-				name: result[i].LocationName,
-				address: result[i].Address,
-				status: result[i].IsComplete,
-				time: result[i].LastUpdate,
-				typeGoods: result[i].TypeGoods,
-				temperature: result[i].Temperature,
-				units: result[i].Units,
-				numPackage: result[i].NumPackage
-			}
-			trips.push(obj);
-		}
-		res.send({status: 1, message: 'Success', user: req.user, trips: trips});
+		
+		res.send({status: 1, message: 'SUCCESS', user: req.user, trips: result[0], ware_house: result[1]});
 	});
 });
 app.post('/point/update', function(req, res){

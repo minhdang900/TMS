@@ -39,7 +39,7 @@ function ABADB() {
   this.driverAssigned =  function(callback){
 	  connection.getConnection(function(err, con){
 		    // call sql query
-		    var query = "SELECT t.TripID, TripNumber, Route, DriverUser, TripDate, IsConfirmed, t.TypeGoods, CustomerName, s.Name as Address, "
+		    var query = "SELECT t.TripID, TripNumber, Route, DriverUser, FORMAT(TripDate, 'dd/MM/yyyy hh:mm:ss') as TripDate, IsConfirmed, t.TypeGoods, CustomerName, s.Name as Address, "
 		    			+ " (SELECT Count(*)  FROM Messager WHERE Receiver=t.DriverUser and Status=0) as num_notify "
 		    			+ " FROM Trips t, Trip_WareHouse s "
 		    			+ " WHERE IsConfirmed = 0 and s.TripID = t.TripID";
@@ -252,17 +252,11 @@ function ABADB() {
   }
   this.updateWareHouse = function(tripID, id, status, location, callback){
 	  connection.getConnection(function(err, con){
-		  var query = 'UPDATE Trip_WareHouse SET Status=@Status, Location_Arr=@Location, ArriveTime=GETDATE() WHERE ID=@ID AND TripID=@TripID';
-		  if(status == 2){
-			  query = 'UPDATE Trip_WareHouse SET Status=@Status, Location_Rec=@Location, ReceiveGoodsTime=GETDATE() WHERE ID=@ID AND TripID=@TripID';
-		  } else if(status == 3){
-			  query = 'UPDATE Trip_WareHouse SET Status=@Status, Location_Dep=@Location, DepartureTime=GETDATE() WHERE ID=@ID AND TripID=@TripID';
-		  }
 		  con.input('TripID', sql.BigInt, tripID);
 		  con.input('ID', sql.BigInt, id);
 		  con.input('Status', sql.Int, status);
 		  con.input('Location', sql.VarChar, location);
-		  con.query(query, (err, result)=>{
+		  con.execute('Proc_UpdateWareHouse').then((result, err)=>{
 			  if(err){
 		    		console.dir(err);
 		    		callback({status: 0, message: 'FAIL', error_code: 5079});
