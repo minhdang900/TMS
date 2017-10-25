@@ -181,7 +181,7 @@ class Home extends Component{
     		FWPlugin.modal({
     		    title:  'TMS Message',
     		    text: 'NHẬP SỐ KIỆN GIAO',
-    		    afterText: '<input type="number" min = 0 id="num_package" placeholder="Số Kiện Giao" />',
+    		    afterText: '<input type="number" min = "0" max="1000" id="num_package" placeholder="Số Kiện Giao" />',
     		    buttons: [
     		      {
     		        text: '<i class="ios-icons">forward</i> GỬI',
@@ -591,6 +591,7 @@ class Home extends Component{
 		} else if(Number(item.status) == 4){
 			buttonStart = '';
 			buttonCancel = '';
+			buttonEnd = '';
 			status = <span className="badge bg-red"><i className="fa fa-exclamation-triangle" aria-hidden="true"></i> ĐÃ HỦY</span>;
 		} else if(Number(item.status) == 11){
 			buttonStart = '';
@@ -864,7 +865,7 @@ class Home extends Component{
 		FWPlugin.modal({
 		    title:  'TMS Message',
 		    text: 'NHẬP SỐ KM CÔNG TƠ KẾT THÚC CHUYẾN',
-		    afterText: '<input type="number" min = 0 id="num_km_trip_end" placeholder="Số KM công tơ" />',
+		    afterText: '<input type="number" min = 0 max="999999" id="num_km_trip_end" placeholder="Số KM công tơ" />',
 		    buttons: [
 		      {
 		        text: '<i class="ios-icons">close</i> ĐÓNG',
@@ -1589,10 +1590,10 @@ class Picker extends React.Component {
 	             <div className="item-inner">
 		           <div className="item-subtitle">
 			           <div className="item-input-number">
-			             <input type="number" min="0" id={"num_receive_" + item.id} placeholder="SỐ LƯỢNG GIAO" />
+			             <input type="number" min="0" max="1000" id={"num_receive_" + item.id} placeholder="SỐ LƯỢNG GIAO" />
 			           </div>
 			           <div className="item-input-number">
-			            <input type="number" min="0" id={"num_return_" + item.id} placeholder="SỐ LƯỢNG TRẢ VỀ" />
+			            <input type="number" min="0" max="1000" id={"num_return_" + item.id} placeholder="SỐ LƯỢNG TRẢ VỀ" />
 			           </div>
 		           </div>
 	             </div>
