@@ -741,14 +741,17 @@ class Home extends Component{
 		}
 		return(
 		 <div key={'point__' + item.id} className="timeline-item">
-       	    <div className="timeline-item-date">
+       	  {/*  <div className="timeline-item-date">
        	    	<i className="fa fa-map-marker color-orange" aria-hidden="true"></i> {item.name}</div>
-       	    <div className="timeline-item-divider"></div>
+       	    <div className="timeline-item-divider"></div> */}
        	    <div className="timeline-item-content">
        	      <div className="timeline-item-inner">
        	      	 {status}
 	       	     <p className="active">
 	       	     	<i className="fa fa-clock-o" aria-hidden="true"></i> {item.time}
+		      	</p>
+		      	<p>
+		      		<i className="fa fa-map-marker color-orange" aria-hidden="true"></i> {item.name}
 		      	</p>
        	        <p>
        	        	<i className="fa fa-address-card" aria-hidden="true"></i> {item.address}
