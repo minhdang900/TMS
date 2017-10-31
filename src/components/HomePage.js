@@ -15,6 +15,7 @@ import Person from './Person';
 import Cookie from "react-cookie";
 import Common from ".././common/app.common";
 import Widget from '.././common/app.widget';
+import Filter from './DateFilter'
 import { HashRouter as Router, Route, Link, hashHistory, IndexRoute  } from 'react-router-dom';
 var $$ = Dom7;
 class Home extends Component{ 
@@ -27,6 +28,7 @@ class Home extends Component{
 			locationId: '', 
 			trip_num: '',
 			isAllowEnd: false, // allow show button VỀ BÃI
+			listTray: [],
 			trips:[{ 
 				id: '-1',
 				name: 'BẠN CHƯA CÓ CHUYẾN',
@@ -55,24 +57,34 @@ class Home extends Component{
 	}
 	componentDidMount(){
 		var _ =this; 
+		var date = Common.getLast30Days();
+		var today = new Date();
+		$('.date-from').val(moment().format('YYYY-MM-DD')); // get today
+		$('.date-to').val(moment().format('YYYY-MM-DD')); // get today
+		$('.date-from').attr(
+				   "data-date", 
+				   moment().format( $('.date-from').attr("data-date-format") ));
+		$('.date-to').attr(
+				   "data-date", 
+				   moment().format( $('.date-from').attr("data-date-format") ));
+		
 		var ptrContent = $$('.pull-to-refresh-content');
 		FWPlugin.initPullToRefresh(ptrContent) ;
 		ptrContent.on('ptr:refresh', function (e) {
 			_.getTrips();
 		});
 		Common.socket.on('receiveNotify', this.receiveNotify.bind(this));
-		$('#star-rating').barrating({
-	        theme: 'fontawesome-stars',
-	        initialRating: Common.user.star,
-	        showVlaues: true,
-	        readonly: true,
-	        onSelect:function(value, text, event){
-	        }
-	      });
+//		$('#star-rating').barrating({
+//	        theme: 'fontawesome-stars',
+//	        initialRating: Common.user.star,
+//	        showVlaues: true,
+//	        readonly: true,
+//	        onSelect:function(value, text, event){
+//	        }
+//	      });
 	}
 	receiveNotify(data){
 		var _=this;
-		console.log(data);
 		if(Common.user == undefined){
 			return;
 		}
@@ -104,49 +116,106 @@ class Home extends Component{
 			    	 +'</div>'
 			    	 +'<p style="font-size:16px; font-weigh: bolder">Bạn có đồng ý vận chuyển?</p>',
 			    buttons: [ 
+				{
+				    text: 'ĐÓNG',
+				    onClick: function() {
+				    	Common.request({
+				     		type: 'GET',
+				     		url: '/notify/viewed',
+				     		data: {id: trip.id, username: Common.user.username}
+				     	}, (res)=>{
+				     		Common.isShowNotify = false;
+				//     		trip.status = '7'; // Chua roi bai
+				     		_.receiveTrip(trip);
+				     	});
+				    }
+				  },
 			      {
-			        text: '<i class="ios-icons">close</i> TỪ CHỐI',
+			        text: 'TỪ CHỐI',
 			        onClick: function() {
-			        	Common.request({
-			         		type: 'GET',
-			         		url: '/notify/reply',
-			         		data: {id: trip.id, status: 0, username: Common.user.username}
-			         	}, (res)=>{
-			         		_.isShowNotify = false;
-			         		trip.status = 4;
-			         		_.receiveTrip(trip);
-			         	});
+			        	_.denyTrip(trip);
 			        }
 			      },
 			      {
-			        text: '<i class="ios-icons">check</i> CHẤP NHẬN',
+			        text: 'NHẬN',
 			        onClick: function() {
-			        	Common.request({
-			         		type: 'GET',
-			         		url: '/notify/reply',
-			         		data: {id: trip.id, status: 1, username: Common.user.username}
-			         	}, (res)=>{
-			         		Common.isShowNotify = false;
-			         		trip.status = '7'; // Chua roi bai
-			         		_.receiveTrip(trip);
-			         	});
+			        	_.acceptTrip(trip);
 			        }
-			      },
+			      }
+			      
 			    ]
 			  });
 			}
 		}
 	}
+	acceptTrip(trip){
+		var _=this;
+		Common.request({
+     		type: 'GET',
+     		url: '/notify/reply',
+     		data: {id: trip.id, status: 1, username: Common.user.username}
+     	}, (res)=>{
+     		Common.isShowNotify = false;
+     		trip.status = 7; // Chua roi bai
+     		_.receiveTrip(trip);
+     	});
+	}
+	denyTrip(trip){
+		var _=this;
+		FWPlugin.modal({
+    		title:'TMS Message',
+    		text:'CHUYẾN SẼ ĐƯỢC HỦY?',
+    		buttons:[
+				{
+					text:'ĐÓNG',
+					close: true,
+					onClick: function(){
+						Common.request({
+				     		type: 'GET',
+				     		url: '/notify/viewed',
+				     		data: {id: trip.id, username: Common.user.username}
+				     	}, (res)=>{
+				     		_.isShowNotify = false;
+//				     		trip.status = 4;
+				     		_.receiveTrip(trip);
+				     	});
+					}
+				},
+    		  {
+    			text:'ĐỒNG Ý',
+    			close: true,
+    			onClick: function(){
+    				Common.request({
+    		     		type: 'GET',
+    		     		url: '/notify/reply',
+    		     		data: {id: trip.id, status: 0, username: Common.user.username}
+    		     	}, (res)=>{
+    		     		_.isShowNotify = false;
+    		     		trip.status = 4;
+    		     		_.receiveTrip(trip);
+    		     	});
+    			}
+    		}]
+    	});
+	}
 	receiveTrip(res){
 		var _=this;
 		var trips = [];
 		var tmp = _.state.trips;
-		trips.push(res);
+		var check = 0;
+//		trips.push(res);
 		if(_.state.trips[0].status == '-1'){
 			tmp = [];
 		}
 		for(var i = 0; i < tmp.length; i++){
+			if(res.id == tmp[i].id){
+				check = 1;
+				tmp[i] = res;
+			}
 			trips.push(tmp[i]);
+		}
+		if(check == 0){
+			trips.push(res);
 		}
 		_.setState({trips: trips});
 	}
@@ -238,10 +307,12 @@ class Home extends Component{
 	}
 	getTrips(){
 		var _=this;
+		var from = $('.date-from').attr('data-date');
+		var to = $('.date-to').attr('data-date');
 		FWPlugin.showIndicator();
 		var obj = {
 			type: 'GET',
-			data: {username: Common.user.username || Cookie.load("user").username},
+			data: {username: Common.user.username || Cookie.load("user").username, date_from: from, date_to: to},
 			url: '/trips'
 		}
 		Common.request(obj, (res)=> {
@@ -249,6 +320,25 @@ class Home extends Component{
 			var length = tmp.length;
 			if(length > 0){
 				_.setState({trips: res.trips});
+			} else {
+				_.setState({
+					trips:[{ 
+					id: '-1',
+					name: 'BẠN CHƯA CÓ CHUYẾN',
+					trip_num: '00000',
+					status: '-1',
+					time: Common.getDateTime(), 
+					ware_house:[],
+					location:[{
+						id: '-1', 
+						name: 'ĐIỂM GIAO',
+						status: '-1', 
+						address:'CHƯA CÓ ĐIỂM GIAO',
+						phone: '0125957975',
+						time: Common.getDateTime()
+					}]
+				  }]
+				});
 			}
 			FWPlugin.pullToRefreshDone();
 			FWPlugin.hideIndicator();
@@ -297,6 +387,9 @@ class Home extends Component{
 		$('.panel-overlay').on('click', function(){
 			FWPlugin.closePanel();
 		});
+	}
+	openFilter(event){
+		FWPlugin.pickerModal('.picker-filter');
 	}
 	finishPoint(item){
 		// update TripDetailID current
@@ -532,6 +625,7 @@ class Home extends Component{
 	}
 	itemDraw(item){
 		var buttonStart =  '';
+		var buttons = '';
 		var buttonEnd = <p>
 							 <Link to="/home" replace 
 								onClick={this.returnBackPaking.bind(this, item)} className="button button-round button-fill button-end">
@@ -548,6 +642,21 @@ class Home extends Component{
 			status = '';
 			buttonCancel = '';
 			buttonEnd = '';
+			buttons = '';
+		} else if(Number(item.status) == 0){
+			status = <span className="badge bg-orange"><i className="fa fa-warning faa-flash animated" aria-hidden="true"></i> CHƯA NHẬN CHUYẾN </span>;
+			buttonCancel = '';
+			buttonEnd = '';
+			buttons = <p className = "buttons-row">
+						 <Link to="/home" replace 
+							onClick={this.denyTrip.bind(this, item)} className="button button-round button-fill" style={{color: '#fff',background: '#f58220'}}>
+						 	<i className="ios-icons">close</i> TỪ CHỐI
+					     </Link>
+						 <Link to="/home" replace 
+							onClick={this.acceptTrip.bind(this, item)} className="button button-round button-fill" style={{color: '#fff',background: '#f58220'}}>
+						 	<i className="ios-icons">check</i> NHẬN CHUYẾN
+					     </Link>
+					 </p>
 		} else if(Number(item.status) == 7){
 			status = <span className="badge bg-orange"><i className="fa fa-warning faa-flash animated" aria-hidden="true"></i> CHƯA RỜI BÃI </span>;
 			buttonStart = <p>
@@ -609,8 +718,11 @@ class Home extends Component{
      	    			onClick={this.itemClick.bind(this, item)} 
      	    					className="item-content item-link">
 	       	        <div className="item-inner">
-	       	          <div className="item-title">
+	       	          <div className="item-title" style={{width:'100%'}}>
      	    	 		<p><i className="fa fa-truck color-orange" aria-hidden="true"></i> {item.name}</p>
+     	    	 		<div className="item-after" style={{float:'right'}}>
+		       	          	{status}
+		       	        </div>
      	    	 		<span className="item-text" style={{height: '30px'}}>
 	  	    	 			<i className="fa fa-key" aria-hidden="true"></i> {item.trip_num}
 	  	    	 		</span>
@@ -619,22 +731,23 @@ class Home extends Component{
      	    	 		</span>
      	    	 		
      	    	 	   </div>
-	       	          <div className="item-after">
-	       	          	{status}
-	       	          </div>
+	       	          
 	       	        </div>
      	          </Link>
 	       	      <div className="accordion-item-content">
 	       	        <div>
 			       	    <div className="timeline tablet-sides">
 				       	    {item.location.length > 0? buttonStart:''}
-				       	    <div style={{'display': (item.status == '7' || item.status == '11'?'none':'block')}}>
+				       	    {buttons}
+				       	  {/*<div style={{'display': (item.status == '7' || item.status == '11'?'none':'block')}}>*/}
 				       	    	<div className="list-block media-list list-warehouse">
 				       	    		<ul style={{background:'transparent'}}>
-					       	    		{item.ware_house.map(this.wareHouse, this)}
+					       	    		{item.ware_house.map(function(x){
+					       	    			return this.wareHouse(x, item.status);
+					       	    		}, this)}
 				       	    		</ul>
 				       	    	</div>
-				       	    </div>
+				       	    {/*</div>*/}
 				       	    {item.location.map(this.pointDraw, this)}
 				       	    {this.state.isAllowEnd == true ? buttonEnd : ''}
 				       	</div>
@@ -643,7 +756,7 @@ class Home extends Component{
      	    </li>
 		);
 	}
-	wareHouse(item){
+	wareHouse(item, status){
 		var button = '';
 		if(item.status == 0){
 			button = <span className="badge"><i className="fa fa-check-circle" aria-hidden="true"></i> CHƯA ĐẾN KHO</span>
@@ -665,20 +778,23 @@ class Home extends Component{
 		}	else if(item.status == 4){
 			button = <span className="badge bg-green"><i className="fa fa-check-circle" aria-hidden="true"></i> NHẬN HÀNG XONG</span>
 		}
+		if(status == 0 || status == 7 || status == 11 || status == 4){
+			button = '';
+		}
 		return(
 				<li key={'warehouse__' + item.id} className="item-content">
 	             <div className="item-inner">
 		           <div className="item-title-row">
-		             <div className="item-title">{item.name}</div>
+		             <div className="item-title"><i className="fa fa-home color-orange" aria-hidden="true"></i> {item.name}</div>
 		           </div>
 		           <div className="item-subtitle">
 		           		<p className="color-white"><i className="fa fa-map-marker color-orange" aria-hidden="true"></i> {item.address}</p>
+		           		<div className="item-after" style={{float:'right'}}>
+			              {button}
+			             </div>
 		           		<p className="color-white"><i className="fa fa-cubes color-orange" aria-hidden="true"></i> {item.type}</p>
 		           		<p className="color-white"><i className="fa fa-thermometer-empty color-orange" aria-hidden="true"></i> {item.temperature}</p>
 		           </div>
-	             </div>
-	             <div className="item-after">
-		              {button}
 	             </div>
 	           </li>
 		);
@@ -757,14 +873,11 @@ class Home extends Component{
        	        	<i className="fa fa-address-card" aria-hidden="true"></i> {item.address}
        	        </p>
 	       	    <p>
-	       	     	<i className="fa fa-cubes" aria-hidden="true"></i> {item.typeGoods}
+	       	     	<i className="fa fa-clock-o" aria-hidden="true"></i> {item.time_delivery}
 		        </p>
 		        <p>
-		        	<i className="fa fa-database" aria-hidden="true"></i> {item.units}
+		        	<i className="fa fa-volume-control-phone" aria-hidden="true"></i> {item.contact}
        	     	</p>
-		        <p>
-		        	<i className="fa fa-thermometer-empty" aria-hidden="true"></i> {item.temperature}
-		        </p>
        	        {button}
        	      </div>
        	    </div>
@@ -968,7 +1081,7 @@ class Home extends Component{
 					      <p className="icon-user">
 					      	<img src="/styles/images/user.png"/>
 					      </p>
-					      <p className="experence-star">
+					      {/*<p className="experence-star">
 						  	<select id="star-rating">
 				       		  <option value="1">1</option>
 				       		  <option value="2">2</option>
@@ -976,7 +1089,7 @@ class Home extends Component{
 				       		  <option value="4">4</option>
 				       		  <option value="5">5</option>
 				       		</select> 
-			      		  </p>
+			      		  </p>*/}
 					      <p><i className="ios-icons">person</i> {Common.user.fullname}</p>
 					      <p><i className="ios-icons">phone_round</i> {Common.user.phone}</p>
 					      <p>
@@ -1000,13 +1113,19 @@ class Home extends Component{
 				       <div className="view tab active">
 						    <div className="navbar">
 								<div data-page="dashboard" className="navbar-inner">
-									<div className="left"></div>
+									<div className="left">
+										 <Link to={'/home'} data-panel="left" 
+											  onClick={this.openSide.bind(this, event)} 
+										  	  className="open-pannel open-left-panel link icon-only" replace>  
+										  	 <i className="ios-icons">person</i>
+										  </Link>
+									</div>
 									<div className="center ">THÔNG TIN GIAO HÀNG</div>
 									<div className="right">
-									  <Link to={'/home'} data-panel="left" 
-										  onClick={this.openSide.bind(this, event)} 
-									  	  className="open-pannel open-left-panel link icon-only" replace>  
-									  	<i className="ios-icons">person</i>
+									   <Link to={'/home'}
+										  onClick={this.openFilter.bind(this, event)} 
+									  	  className="link icon-only" replace>  
+									  	 <i className="ios-icons">more_vertical</i>
 									  </Link>
 									</div>
 								</div>
@@ -1035,6 +1154,7 @@ class Home extends Component{
 					       				location_id = {this.state.locationId}
 					       				trips = {this.state.trips}
 					       				updatePointState = {this.updatePointState.bind(this)} />
+					       		<Filter getTrips = {this.getTrips.bind(this)} />
 					       	</div>
 				       </div>
 					   <Tabbar index="1"/>
@@ -1539,7 +1659,7 @@ class Popup extends React.Component {
 	      );
 	   }
 }
-		    		
+	    		
 class Picker extends React.Component {
 	constructor(props) {
 		super(props);
@@ -1551,11 +1671,13 @@ class Picker extends React.Component {
     }
     componentDidMount(){
     	var _=this;
-    	Common.request({type:"GET", url: '/point/tray'}, (res)=>{
-			if(res.status){
-				_.setState({listTray: res.data});
-			}
-		});
+    	$('.popup-tray').on('popup:opened', function () {
+    		Common.request({type:"GET", url: '/point/tray', data:{id: _.props.location_id}}, (res)=>{
+    			if(res.status){
+    				_.setState({listTray: res.data});
+    			}
+    		});
+    	});
     }
     send(){
     	var _=this;

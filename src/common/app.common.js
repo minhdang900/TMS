@@ -46,11 +46,11 @@ eCommon.getLocation = function(callback){
 	            TSM.TRANSPORTER = null;   
 			 } 
 		 }, 1);
-//	    setTimeout(function(){
-//	    	 clearInterval(time);
-//	    	 callback({lat: -2, lon: -2});
-//	         TSM.TRANSPORTER = null;  
-//	    }, 1000);
+	    setTimeout(function(){
+	    	 clearInterval(time);
+	    	 callback({lat: -2, lon: -2});
+	         TSM.TRANSPORTER = null;  
+	    }, 1000);
 	} else {
 		callback({'lat':'-3','lon':'-3'}); 
 	} 
@@ -232,9 +232,33 @@ eCommon.getDateBetween = function(dateFrom, dateTo){
 	}
 	return between;
 }
+eCommon.getLastMonth = function() {
+    var date = new Date();
+    date.setMonth(date.getMonth());// return month 0->11
+    date.setDate(0);// return last day of the previous month
+    return date;
+}
 eCommon.getLast30Days = function() {
     var date = new Date();
     date.setDate(date.getDate()- 30);
+    return date;
+}
+eCommon.getToday = function(){
+	return new Date();
+}
+eCommon.getYesterday = function() {
+    var date = new Date();
+    date.setDate(date.getDate()-1);
+    return date;
+}
+eCommon.getLast7Days = function() {
+    var date = new Date();
+    date.setDate(date.getDate()-7);
+    return date;
+}
+eCommon.getThisWeek = function() {
+    var date = new Date();
+    date.setDate(date.getDate()-6);
     return date;
 }
 eCommon.rippleEffect = function($othis, e){
