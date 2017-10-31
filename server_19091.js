@@ -103,7 +103,11 @@ app.post('/login', passport.authenticate('local-login', {
 }));
 app.get('/trips', function(req, res){
 	var username = req.query.username;
-	database.getTrips(username, (result) =>{
+	var date_from = req.query.date_from;
+	var date_to = req.query.date_to;
+	console.log(date_from);
+	console.log(date_to);
+	database.getTrips(username, date_from, date_to,  (result) =>{
 		//[ [ Object, Object, Object,.. ], [Object, Object...] ]
 		trips = result[0];
 		var length = trips.length;
@@ -265,7 +269,9 @@ app.post('/point/package', function(req, res){
 	});
 });
 app.get('/point/tray', function(req, res){
-	database.getListTray((result)=>{
+	var id = req.query.id;
+	console.log(id);
+	database.getListTray(id, (result)=>{
 		res.send(result)
 	});
 });
@@ -376,6 +382,11 @@ app.get('/notify/check', function(req, res){
 });
 app.get('/notify/reply', function(req, res){
 	database.reply(req.query.username, req.query.id, req.query.status, "", (result)=>{
+		res.send({status: result, message: 'Success'}); 
+	});
+});
+app.get('/notify/viewed', function(req, res){
+	database.viewed(req.query.username, req.query.id, (result)=>{
 		res.send({status: result, message: 'Success'}); 
 	});
 });
