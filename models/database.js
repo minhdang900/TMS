@@ -39,10 +39,10 @@ function ABADB() {
   this.driverAssigned =  function(callback){
 	  connection.getConnection(function(err, con){
 		    // call sql query
-		    var query = "SELECT t.TripID, TripNumber, Route, DriverUser, FORMAT(TripDate, 'dd/MM/yyyy hh:mm:ss') as TripDate, IsConfirmed, t.TypeGoods, CustomerName, s.Name as Address, "
+		    var query = "SELECT t.TripID, TripNumber, Route, DriverUser, FORMAT(TripDate, 'dd/MM/yyyy hh:mm:ss') as TripDate, t.IsConfirmed, t.TypeGoods, t.CustomerName, s.Name as Address, "
 		    			+ " (SELECT Count(*)  FROM Messager WHERE Receiver=t.DriverUser and Status=0) as num_notify "
 		    			+ " FROM Trips t, Trip_WareHouse s "
-		    			+ " WHERE IsConfirmed = 0 and s.TripID = t.TripID";
+		    			+ " WHERE t.IsConfirmed = 0 AND t.IsViewed = 0 and s.TripID = t.TripID";
 			con.query(query, (err, result) => {
 				if(err){
 		    		console.dir(err);
@@ -72,6 +72,26 @@ function ABADB() {
 		    }).catch(function(err) { 
 		      console.log(err);
 		    });
+	  });
+  }
+  this.viewed = function(username, tripId, callback){
+	  connection.getConnection(function(err, con){
+		    // call sql query
+		    var query = "Update Trips set isViewed=1 where TripID=@TripID and DriverUser=@UserName";
+		  	con.input('UserName', sql.VarChar(50), username);
+		  	con.input('TripID', sql.VarChar(50), tripId);
+			con.query(query, (err, result) => {
+				if(err){
+		    		console.dir(err);
+		    	}
+				if(typeof result === 'undefined'){
+					callback([]);
+					return;
+				}
+				common.log('This is reuslt GET NOTIFYCATIONS');
+				console.dir(result);
+				callback(result.recordset);
+			});
 	  });
   }
   this.notification = function(username, callback){
@@ -131,9 +151,11 @@ function ABADB() {
 			});
 	  });
   }
-  this.getTrips = function(username, callback){
+  this.getTrips = function(username, from, to, callback){
 	  connection.getConnection(function(err, con){
-		  con.input('username', sql.VarChar(50), username);
+		  con.input('UserName', sql.VarChar(50), username);
+		  con.input('DateFrom', sql.VarChar(50), from);
+		  con.input('DateTo', sql.VarChar(50), to);
 		  con.execute('Proc_GetTrip').then((result, err) => {
 		    	if(err){
 		    		console.dir(err);
@@ -433,10 +455,11 @@ function ABADB() {
 			});
 	  });
   }
-  this.getListTray = function(callback){
+  this.getListTray = function(id, callback){
 	  connection.getConnection(function(err, con){
 		    // call sql query
-		    var query = 'SELECT TrayID as id, Name as name, Type as type FROM Tray ORDER BY TrayID ASC';
+		    var query = 'SELECT ID as id, NameTray as name, TypeTray as type FROM TripDetailTray WHERE TripDetailID=@ID ORDER BY TripDetailID ASC';
+		    con.input('ID', sql.BigInt, id);
 			con.query(query, (err, result) => {
 				if(err){
 					console.dir(err);
