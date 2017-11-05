@@ -20,6 +20,7 @@ import MobileDetect from 'mobile-detect';
 import Common from './common/app.common';
 import { browserHistory } from 'react-router';
 import { HashRouter as Router, Route, Link, hashHistory, IndexRoute  } from 'react-router-dom'; // recommend
+
 ReactDOM.render((
 	   <Router history={browserHistory}>
 		 <div style={{'height': '100%'}}>
@@ -33,6 +34,7 @@ ReactDOM.render((
 		</div>
 	   </Router>
 	), document.getElementById('root'));
+
 var md = new MobileDetect(window.navigator.userAgent);
 console.log( md.mobile() );          
 console.log( md.phone() );           

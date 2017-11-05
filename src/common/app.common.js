@@ -46,11 +46,11 @@ eCommon.getLocation = function(callback){
 	            TSM.TRANSPORTER = null;   
 			 } 
 		 }, 1);
-	    setTimeout(function(){
-	    	 clearInterval(time);
-	    	 callback({lat: -2, lon: -2});
-	         TSM.TRANSPORTER = null;  
-	    }, 1000);
+//	    setTimeout(function(){
+//	    	 clearInterval(time);
+//	    	 callback({lat: -2, lon: -2});
+//	         TSM.TRANSPORTER = null;  
+//	    }, 1000);
 	} else {
 		callback({'lat':'-3','lon':'-3'}); 
 	} 

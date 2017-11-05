@@ -45,19 +45,31 @@ class Filter extends React.Component{
 	}
     
     componentDidMount(){
-    	 
+    	$('.date-from').on('change', function(){
+    		$(".picker-filter input:radio").prop("checked", false);
+    		this.setAttribute(
+    		   "data-date", 
+    		   moment(this.value, "YYYY-MM-DD").format( this.getAttribute("data-date-format") ));
+    	});
+    	$('.date-to').on('change', function(){
+    		$(".picker-filter input:radio").prop("checked", false);
+    		this.setAttribute(
+    		   "data-date", 
+    		   moment(this.value, "YYYY-MM-DD").format( this.getAttribute("data-date-format") ));
+    	});
     }
     selectChanged(item){
-    	console.log(item);
     	let from = new Date();
 		let to = new Date();
 		if(item.id == 2){
 			from = Common.getYesterday();
-			//to = Common.getYesterday();
+			to = Common.getYesterday();
 		} else if(item.id == 3){
 			from = Common.getLast7Days();
+			to = Common.getYesterday();
 		} else if(item.id == 4){
 			from = Common.getLast30Days();
+			to = Common.getYesterday();
 		} else if(item.id == 5){
 			from = Common.getToday();
 			from.setDate(1);
@@ -74,6 +86,7 @@ class Filter extends React.Component{
 		$('.date-to').attr(
 				   "data-date", 
 				   moment(to).format( $('.date-from').attr("data-date-format") ));
+		this.setState({indexSelected: item.id});
     }
     filterTrips(){
     	console.log('press button filter');

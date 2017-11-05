@@ -892,6 +892,7 @@ class Home extends Component{
 //			Common.user.login = false;
 //			Widget.callAndroid({cmd:'set', key:'NOTIFY', value:'http://logaba.com:19091/notify/check?username=unknown'});
 			Widget.callAndroid({cmd:'set', key:'USERNAME', value:'unknown'});
+			FWPlugin.closeModal('.picker-filter');
 			setTimeout(function(){
 				location.href = '/#/login';
 			}, 500);
