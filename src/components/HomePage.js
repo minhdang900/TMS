@@ -737,6 +737,10 @@ class Home extends Component{
 	       	      <div className="accordion-item-content">
 	       	        <div>
 			       	    <div className="timeline tablet-sides">
+			       	    	<div className="content-block" style={{color: '#fff', 'fontSize': '16px'}}>
+						         <p>{item.description}</p>
+						     </div>
+			       	    	
 				       	    {item.location.length > 0? buttonStart:''}
 				       	    {buttons}
 				       	  {/*<div style={{'display': (item.status == '7' || item.status == '11'?'none':'block')}}>*/}
